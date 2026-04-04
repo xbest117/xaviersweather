@@ -2,19 +2,19 @@
   "name": "Xavier's Weather Channel",
   "short_name": "XWC Weather",
   "description": "Honest weather for Tuscarawas County, Ohio",
-  "start_url": "https://www.xaviersweather.com/",
-  "scope": "https://www.xaviersweather.com/",
+  "start_url": "https://xaviersweather.com/",
+  "scope": "https://xaviersweather.com/",
   "display": "standalone",
   "background_color": "#0a1628",
   "theme_color": "#0a1628",
   "orientation": "portrait-primary",
   "icons": [
-    { "src": "https://www.xaviersweather.com/icon-96.png",  "sizes": "96x96",   "type": "image/png" },
-    { "src": "https://www.xaviersweather.com/icon-128.png", "sizes": "128x128", "type": "image/png" },
-    { "src": "https://www.xaviersweather.com/icon-144.png", "sizes": "144x144", "type": "image/png" },
-    { "src": "https://www.xaviersweather.com/icon-152.png", "sizes": "152x152", "type": "image/png" },
-    { "src": "https://www.xaviersweather.com/icon-180.png", "sizes": "180x180", "type": "image/png" },
-    { "src": "https://www.xaviersweather.com/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "https://www.xaviersweather.com/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "https://xaviersweather.com/icon-96.png",  "sizes": "96x96",   "type": "image/png" },
+    { "src": "https://xaviersweather.com/icon-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "https://xaviersweather.com/icon-144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "https://xaviersweather.com/icon-152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "https://xaviersweather.com/icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "https://xaviersweather.com/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "https://xaviersweather.com/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
