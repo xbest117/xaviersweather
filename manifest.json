@@ -1,6 +1,6 @@
 {
   "name": "Xavier's Weather Channel",
-  "short_name": "XWC Weather",
+  "short_name": "Xavier's Weather",
   "description": "Honest weather for Tuscarawas County, Ohio",
   "start_url": "https://xaviersweather.com/",
   "scope": "https://xaviersweather.com/",
