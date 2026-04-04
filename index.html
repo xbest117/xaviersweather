@@ -1,0 +1,2489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Live weather conditions, forecasts, and alerts for Tuscarawas County, Ohio." />
+<title>Xavier's Weather Channel</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+:root {
+  --font-body:      -apple-system, 'SF Pro Display', 'Helvetica Neue', Inter, sans-serif;
+
+  --bg-top:         #0a1628;
+  --bg-mid:         #0d2444;
+  --bg-bot:         #1a3a5c;
+
+  --glass:          rgba(255,255,255,0.10);
+  --glass-border:   rgba(255,255,255,0.20);
+  --glass-border-b: rgba(255,255,255,0.08);
+  --glass-inset:    rgba(255,255,255,0.06);
+  --glass-shadow:   0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.20), inset 0 1px 0 rgba(255,255,255,0.25);
+
+  --text-1:         rgba(255,255,255,1.0);
+  --text-2:         rgba(255,255,255,0.82);
+  --text-3:         rgba(255,255,255,0.55);
+
+  --accent:         rgba(100,180,255,0.9);
+
+  --radius-sm:      10px;
+  --radius-md:      16px;
+  --radius-xl:      32px;
+
+  --orb-1:          #1a6ecc;
+  --orb-2:          #0a3d7a;
+  --orb-3:          #153d6e;
+}
+
+body.wx-sunny  { --orb-1:#d97706; --orb-2:#f59e0b; --orb-3:#7c3400; }
+body.wx-cloudy { --orb-1:#64748b; --orb-2:#94a3b8; --orb-3:#334155; }
+body.wx-rainy  { --orb-1:#1d4ed8; --orb-2:#3b82f6; --orb-3:#1e3a8a; }
+body.wx-snowy  { --orb-1:#5b8dee; --orb-2:#93c5fd; --orb-3:#1e3a8a; }
+body.wx-stormy { --orb-1:#1e293b; --orb-2:#475569; --orb-3:#0f172a; }
+body.wx-foggy  { --orb-1:#607d8b; --orb-2:#90a4ae; --orb-3:#37474f; }
+
+/* Night variants — deeper, darker versions of each theme */
+body.wx-night {
+  --bg-top: #050810;
+  --bg-mid: #080d1a;
+  --bg-bot: #030508;
+}
+body.wx-night.wx-sunny  { --orb-1:#92400e; --orb-2:#78350f; --orb-3:#3b1a00; }
+body.wx-night.wx-cloudy { --orb-1:#1e293b; --orb-2:#334155; --orb-3:#0f172a; }
+body.wx-night.wx-rainy  { --orb-1:#1e3a8a; --orb-2:#1d4ed8; --orb-3:#0f1f5c; }
+body.wx-night.wx-snowy  { --orb-1:#1e3a8a; --orb-2:#2d5fa8; --orb-3:#0d1f4a; }
+body.wx-night.wx-stormy { --orb-1:#0f172a; --orb-2:#1e293b; --orb-3:#020408; }
+body.wx-night.wx-foggy  { --orb-1:#1c2a35; --orb-2:#263545; --orb-3:#111c24; }
+
+/* Winter orb shift (Dec–Feb) — cool icy blues */
+body.wx-winter.wx-sunny  { --orb-1:#b45309; --orb-2:#d97706; --orb-3:#5c2d00; }
+body.wx-winter.wx-cloudy { --orb-1:#334155; --orb-2:#4b6080; --orb-3:#1e293b; }
+body.wx-winter.wx-night  { --bg-top:#020508; --bg-mid:#050a12; --bg-bot:#020306; }
+body.wx-winter.wx-night.wx-sunny  { --orb-1:#4c2810; --orb-2:#3b1f0a; --orb-3:#1a0c00; }
+
+body.storm-tracker {
+  --bg-top: #1a0505;
+  --bg-mid: #2d0a0a;
+  --bg-bot: #0f0202;
+  --orb-1:  #7f1d1d;
+  --orb-2:  #dc2626;
+  --orb-3:  #450a0a;
+}
+body.storm-tracker .topbar {
+  background: rgba(127,29,29,0.72) !important;
+  border-bottom-color: rgba(239,68,68,0.45) !important;
+  box-shadow: 0 2px 32px rgba(220,38,38,0.35) !important;
+}
+body.storm-tracker .topbar-brand h1 { color: #fca5a5; }
+body.storm-tracker #alertBar {
+  background: rgba(220,38,38,0.28) !important;
+  border-bottom-color: rgba(239,68,68,0.6) !important;
+  color: #fca5a5 !important;
+  animation: stAlertPulse 1.8s ease-in-out infinite;
+}
+body.storm-tracker #alertPanel {
+  background: rgba(127,29,29,0.5) !important;
+  border-bottom-color: rgba(239,68,68,0.3) !important;
+  color: #fca5a5 !important;
+}
+body.storm-tracker .glass {
+  border-color: rgba(239,68,68,0.22) !important;
+  box-shadow: 0 0 0 1px rgba(239,68,68,0.12), 0 8px 32px rgba(0,0,0,0.45) !important;
+}
+body.storm-tracker .status-dot {
+  background: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.3) !important;
+  animation: stDotPulse 1s ease-in-out infinite !important;
+}
+body.storm-tracker #wxCanvas { opacity: 0.55 !important; }
+
+@keyframes stAlertPulse {
+  0%,100% { background: rgba(220,38,38,0.28); }
+  50%      { background: rgba(220,38,38,0.48); }
+}
+@keyframes stDotPulse {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.4); }
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-1);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(160deg, var(--bg-top) 0%, var(--bg-mid) 50%, var(--bg-bot) 100%);
+  z-index: -2;
+  transition: background 4s ease;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 700px 500px at 20% 30%, var(--orb-1), transparent 60%),
+    radial-gradient(ellipse 500px 400px at 75% 60%, var(--orb-2), transparent 55%),
+    radial-gradient(ellipse 400px 300px at 50% 90%, var(--orb-3), transparent 50%);
+  opacity: 0.55;
+  transition: background 4s ease;
+}
+
+#wxCanvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.4;
+}
+
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-shadow);
+  position: relative;
+  overflow: hidden;
+}
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.0) 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.glass::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+.glass > * { position: relative; z-index: 2; }
+
+.glass.overflow-visible { overflow: visible; }
+
+.page {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 60px;
+  background: rgba(10,22,40,0.55);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border-bottom: 1px solid var(--glass-border-b);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-brand { display: flex; align-items: baseline; gap: 10px; }
+.topbar-brand h1 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.topbar-brand span {
+  font-size: 0.75rem;
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.73rem;
+  color: var(--text-3);
+}
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 0 3px rgba(52,211,153,0.2);
+  animation: pulse-dot 2.5s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { box-shadow: 0 0 0 3px rgba(52,211,153,0.2); }
+  50%      { box-shadow: 0 0 0 6px rgba(52,211,153,0.0); }
+}
+
+#alertBar {
+  display: none;
+  background: rgba(245,158,11,0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(245,158,11,0.35);
+  padding: 10px 28px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #fde68a;
+  cursor: pointer;
+  position: sticky;
+  top: 60px;
+  z-index: 99;
+  transition: background 0.2s;
+}
+#alertBar:hover { background: rgba(245,158,11,0.26); }
+#alertPanel {
+  display: none;
+  background: rgba(120,53,15,0.35);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(245,158,11,0.2);
+  padding: 16px 28px;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: #fde68a;
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.page-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hero-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 20px;
+  align-items: stretch;
+  position: relative;
+  z-index: 10;
+}
+.hero-row > * { min-width: 0; }
+
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+.bottom-row > .glass {
+  display: flex;
+  flex-direction: column;
+  height: 916px;
+}
+.bottom-row > .glass .rss-feed {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.bottom-row > div {
+  height: 916px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  padding: 20px 22px 0;
+  margin-bottom: 14px;
+}
+.section-head h2 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-1);
+}
+
+iframe {
+  border: 0;
+  display: block;
+  width: 100%;
+  border-radius: 0 0 calc(var(--radius-xl) - 2px) calc(var(--radius-xl) - 2px);
+}
+
+.cc-hero {
+  padding: 28px 24px 22px;
+  border-bottom: 1px solid var(--glass-border-b);
+}
+.cc-greeting {
+  padding: 14px 24px 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
+
+.cc-location {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-1);
+  margin-bottom: 20px;
+}
+.cc-main {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 12px;
+}
+.cc-icon-wrap { width: 90px; height: 90px; flex-shrink: 0; }
+.cc-temp {
+  font-size: 6rem;
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+.cc-sky {
+  font-size: 1.05rem;
+  font-weight: 300;
+  color: var(--text-2);
+  margin-top: 5px;
+}
+.cc-detail {
+  font-size: 0.8rem;
+  font-weight: 300;
+  color: var(--text-2);
+  line-height: 1.65;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--glass-border-b);
+}
+
+.cc-metrics {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--glass-border-b);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.cc-metric {
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-b);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.76rem;
+  color: var(--text-2);
+  line-height: 1.35;
+  transition: background 0.2s;
+}
+.cc-metric:hover { background: rgba(255,255,255,0.10); }
+.cc-metric.full {
+  grid-column: 1 / -1;
+  font-size: 0.70rem;
+  color: var(--text-3);
+  white-space: pre-line;
+}
+.stale-warn { color: #fbbf24; font-weight: 600; }
+
+.cc-sun-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 8px;
+  padding: 14px 24px 16px;
+  border-top: 1px solid var(--glass-border-b);
+  border-bottom: 1px solid var(--glass-border-b);
+}
+.cc-sun-chip {
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-b);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.76rem;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+.cc-sun-chip svg { flex-shrink: 0; }
+.sun-chip-text { display: flex; flex-direction: column; }
+.sun-chip-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.sun-chip-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-1);
+}
+.cc-uv-chip { flex-direction: column; align-items: stretch; gap: 6px; padding: 10px 14px; }
+.uv-top-row { display: flex; align-items: center; gap: 10px; }
+.uv-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.76rem;
+  color: var(--text-2);
+  flex: 1;
+}
+.uv-label-row span:last-child {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-1);
+}
+.uv-bar-track {
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-left: 34px;
+}
+.uv-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #34d399, #fbbf24, #f87171, #c084fc);
+  transition: width 0.6s ease;
+}
+
+@keyframes sunrise-ray  { 0%,100% { transform: translateY(0);   opacity:.8; } 50% { transform: translateY(-3px); opacity:1; } }
+@keyframes sunset-ray   { 0%,100% { opacity:.5; } 50% { opacity:1; } }
+@keyframes uv-pulse     { 0%,100% { filter: drop-shadow(0 0 2px rgba(251,191,36,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(251,191,36,0.9)); } }
+@keyframes uv-spin      { to { transform: rotate(360deg); } }
+@keyframes horizon-glow { 0%,100% { opacity:.12; } 50% { opacity:0.32; } }
+
+.sunrise-icon .sr-rays  { animation: sunrise-ray  2s ease-in-out infinite; }
+.sunrise-icon .sr-glow  { animation: horizon-glow 2s ease-in-out infinite; }
+.sunset-icon  .ss-rays  { animation: sunset-ray   2.5s ease-in-out infinite; }
+.sunset-icon  .ss-glow  { animation: horizon-glow 2.5s ease-in-out infinite; }
+.uv-icon      .uv-rays  { animation: uv-spin      8s linear      infinite; transform-origin: 12px 12px; }
+.uv-icon                { animation: uv-pulse     3s ease-in-out infinite; }
+
+.cc-hourly { padding: 16px 24px 22px; }
+.cc-hourly-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-1);
+  margin-bottom: 10px;
+}
+.cc-hourly-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: scroll;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.35) rgba(255,255,255,0.06);
+}
+.cc-hourly-scroll::-webkit-scrollbar { height: 5px; }
+.cc-hourly-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.06); border-radius: 99px; }
+.cc-hourly-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.35); border-radius: 99px; }
+.cc-hour {
+  flex: 0 0 62px;
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-b);
+  border-radius: var(--radius-sm);
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: background 0.2s, transform 0.15s;
+}
+.cc-hour:hover { background: rgba(255,255,255,0.12); transform: translateY(-2px); }
+.cc-hour.now {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.30);
+}
+.cc-hour-time { font-size: 0.60rem; font-weight: 500; color: var(--text-3); }
+.cc-hour.now .cc-hour-time { color: var(--text-2); }
+.cc-hour-icon { width: 26px; height: 26px; }
+.cc-hour-temp { font-size: 0.82rem; font-weight: 500; }
+.cc-hour-pop  {
+  font-size: 0.60rem;
+  font-weight: 600;
+  min-height: 14px;
+  line-height: 14px;
+}
+.cc-hour-pop.pop-low  { color: #93c5fd; }
+.cc-hour-pop.pop-med  { color: #60a5fa; }
+.cc-hour-pop.pop-high { color: #fbbf24; }
+.cc-error { padding: 10px 24px; font-size: 0.78rem; color: #f87171; }
+
+.cc-temprange {
+  padding: 6px 24px 22px;
+  border-top: 1px solid var(--glass-border-b);
+}
+.tr-row {
+  display: grid;
+  grid-template-columns: 72px 36px 1fr 36px;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+}
+.tr-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tr-low {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-3);
+  text-align: right;
+}
+.tr-track {
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px;
+  position: relative;
+  overflow: hidden;
+}
+.tr-bar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  min-width: 4px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #60a5fa, #fbbf24);
+}
+.tr-high {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-2);
+  text-align: right;
+}
+
+.forecast-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 6px;
+  padding: 0 16px 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+}
+.fc-card {
+  position: relative;
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-b);
+  border-radius: var(--radius-md);
+  padding: 8px 6px 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: default;
+  overflow: visible;
+  transition: background 0.2s, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.fc-card:hover {
+  background: rgba(255,255,255,0.14);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+.fc-card:focus { outline: 1px solid var(--accent); outline-offset: 2px; }
+.fc-card.fc-night { background: rgba(0,0,0,0.12); }
+.fc-name  { font-size: 0.58rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); }
+.fc-icon  { width: 32px; height: 32px; }
+.fc-temp  { font-size: 0.98rem; font-weight: 300; }
+.fc-short { font-size: 0.56rem; color: var(--text-3); text-align: center; line-height: 1.3; }
+
+.fc-tooltip {
+  display: none;
+  position: fixed;
+  width: 220px;
+  background: rgba(10,22,40,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 0.76rem;
+  line-height: 1.6;
+  color: var(--text-2);
+  white-space: normal;
+  text-align: left;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 99999;
+}
+.fc-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: 100%; left: 20px;
+  border: 6px solid transparent;
+  border-bottom-color: rgba(10,22,40,0.92);
+}
+.fc-tooltip.visible { display: block; }
+
+.wx-icon-big   { width: 90px; height: 90px; }
+.wx-icon-med   { width: 38px; height: 38px; }
+.wx-icon-small { width: 26px; height: 26px; }
+.wx-icon svg   { width: 100%; height: 100%; }
+
+@keyframes sun-spin    { to { transform: rotate(360deg); } }
+@keyframes cloud-drift { 0%,100% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
+@keyframes rain-fall   { 0% { transform: translateY(-4px); opacity:0.6; } 100% { transform: translateY(4px); opacity:1; } }
+@keyframes snow-fall   { 0%,100% { transform: translateY(-3px); } 50% { transform: translateY(3px); } }
+@keyframes fog-drift   { 0%,100% { transform: translateX(-6px); } 50% { transform: translateX(6px); } }
+@keyframes storm-flash { 0%,80%,100% { opacity:.7; } 85% { opacity:1; } 90% { opacity:.3; } }
+@keyframes moon-glow   { 0%,100% { filter: drop-shadow(0 0 3px rgba(226,232,240,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(226,232,240,0.7)); } }
+@keyframes wind-blow   { 0%,100% { transform: translateX(-3px); opacity:0.7; } 50% { transform: translateX(3px); opacity:1; } }
+
+.wx-sun      .sun-rays    { animation: sun-spin    14s  linear      infinite; transform-origin: 32px 32px; }
+.wx-partly   .sun-rays    { animation: sun-spin    14s  linear      infinite; transform-origin: 22px 28px; }
+.wx-chancerain .sun-rays  { animation: sun-spin    14s  linear      infinite; transform-origin: 20px 26px; }
+.wx-cloud    .cloud-body  { animation: cloud-drift  5s  ease-in-out infinite; }
+.wx-partly   .cloud-body  { animation: cloud-drift  6s  ease-in-out infinite; }
+.wx-chancerain .cloud-body{ animation: cloud-drift  6s  ease-in-out infinite; }
+.wx-rain     .rain-drops  { animation: rain-fall    .8s linear      infinite alternate; }
+.wx-chancerain .rain-drops{ animation: rain-fall    .8s linear      infinite alternate; }
+.wx-snow     .snow-flakes { animation: snow-fall   1.6s ease-in-out infinite alternate; }
+.wx-fog      .fog-bands   { animation: fog-drift    6s  ease-in-out infinite alternate; }
+.wx-storm    .storm-bolt  { animation: storm-flash 2.4s ease-in-out infinite; }
+.wx-windy    .wind-gusts  { animation: wind-blow    1.8s ease-in-out infinite; }
+
+.wx-mostlysunny .sun-rays  { animation: sun-spin    14s  linear      infinite; transform-origin: 32px 32px; }
+.wx-moon        .moon-body { animation: moon-glow    4s  ease-in-out infinite; }
+.wx-moonclear   .moon-body { animation: moon-glow    4s  ease-in-out infinite; }
+.wx-moonpartly .moon-body  { animation: moon-glow    4s  ease-in-out infinite; }
+.wx-moonpartly .cloud-body { animation: cloud-drift  6s  ease-in-out infinite; }
+.wx-mooncloud  .cloud-body { animation: cloud-drift  5s  ease-in-out infinite; }
+.wx-moonrain   .rain-drops { animation: rain-fall    .8s linear      infinite alternate; }
+.wx-moonrain   .cloud-body { animation: cloud-drift  5s  ease-in-out infinite; }
+.wx-moonsnow   .snow-flakes{ animation: snow-fall   1.6s ease-in-out infinite alternate; }
+.wx-moonsnow   .cloud-body { animation: cloud-drift  5s  ease-in-out infinite; }
+.wx-moonstorm  .storm-bolt { animation: storm-flash 2.4s ease-in-out infinite; }
+.wx-moonstorm  .cloud-body { animation: cloud-drift  5s  ease-in-out infinite; }
+.wx-moonfog    .fog-bands  { animation: fog-drift    6s  ease-in-out infinite alternate; }
+
+.rss-feed {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.25) rgba(255,255,255,0.05);
+}
+.rss-feed::-webkit-scrollbar { width: 5px; }
+.rss-feed::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 99px; }
+.rss-feed::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 99px; }
+.rss-loading {
+  font-size: 0.8rem;
+  color: var(--text-3);
+  padding: 12px 0;
+}
+.rss-item {
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-b);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.rss-item + .rss-item {
+  border-top: none;
+}
+.rss-date {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+.rss-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-1);
+  line-height: 1.4;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--glass-border-b);
+}
+.rss-body {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  line-height: 1.75;
+}
+.rss-body a   { color: var(--accent); text-decoration: underline; }
+.rss-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+  margin: 8px 0;
+  display: block;
+}
+.rss-readmore {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+.rss-readmore:hover { text-decoration: underline; }
+.rss-divider {
+  height: 1px;
+  background: var(--glass-border-b);
+  margin: 4px 0;
+}
+.rss-error {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  padding: 12px 0;
+  line-height: 1.6;
+}
+
+.fb-card {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+.fb-card-logo {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+.fb-card-logo img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.fb-card-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-1);
+}
+.fb-card-sub {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  line-height: 1.6;
+}
+.fb-card-btn {
+  display: inline-block;
+  background: #1877F2;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 28px;
+  border-radius: 99px;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 16px rgba(24,119,242,0.35);
+}
+.fb-card-btn:hover {
+  background: #1666d8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(24,119,242,0.5);
+}
+
+.cc-extra-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 14px 24px 16px;
+  border-top: 1px solid var(--glass-border-b);
+}
+.cc-extra-chip {
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-b);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.76rem;
+  color: var(--text-2);
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.cc-extra-chip .chip-label {
+  font-size: 0.60rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.cc-extra-chip .chip-val {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cc-extra-chip .chip-sub {
+  font-size: 0.64rem;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 18px 24px;
+  font-size: 0.72rem;
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+  border-top: 1px solid var(--glass-border-b);
+  margin-top: 8px;
+}
+
+@media (max-width: 1200px) {
+  .hero-row { grid-template-columns: 1fr 280px; }
+  .cc-metrics { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 800px) {
+  .hero-row    { grid-template-columns: 1fr; }
+  .bottom-row  { grid-template-columns: 1fr; }
+  .forecast-grid { grid-template-columns: repeat(4, 1fr); }
+  .cc-metrics  { grid-template-columns: repeat(2, 1fr); }
+  .page-body   { padding: 12px 16px; }
+  .cc-sun-row  { grid-template-columns: 1fr 1fr; }
+  .cc-uv-chip  { grid-column: 1 / -1; }
+  .cc-extra-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+.funfact-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 22px 28px;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+.funfact-icon {
+  font-size: 2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.funfact-body { flex: 1; min-width: 0; }
+.funfact-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+.funfact-text {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-1);
+  min-height: 2.4em;
+}
+.funfact-text.loading { color: var(--text-3); font-style: italic; }
+.funfact-refresh {
+  background: none;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-3);
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, transform 0.2s;
+  flex-shrink: 0;
+  align-self: center;
+}
+.funfact-refresh:hover { color: var(--text-1); border-color: var(--glass-border-b); transform: rotate(20deg); }
+.funfact-refresh.spinning { animation: ffSpin 0.6s linear; }
+@media (max-width: 500px) {
+  .forecast-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<canvas id="wxCanvas" aria-hidden="true"></canvas>
+
+<div class="page">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <h1>Xavier's Weather Channel</h1>
+      <span>Honest Weather for Tuscarawas County</span>
+    </div>
+    <div class="topbar-status">
+      <div class="status-dot"></div>
+      <span id="statusText">Loading…</span>
+    </div>
+  </header>
+
+  <!-- ALERT BAR -->
+  <div id="alertBar" role="button" tabindex="0" aria-expanded="false">⚠ Weather Alerts — Click to Expand</div>
+  <div id="alertPanel" role="region" aria-label="Weather alerts"></div>
+
+  <!-- PAGE BODY -->
+  <div class="page-body">
+
+    <!-- HERO ROW -->
+    <div class="hero-row">
+
+      <!-- Current Conditions -->
+      <div class="glass" style="overflow:hidden;">
+        <div class="cc-greeting" id="ccGreeting"></div>
+        <div class="cc-hero">
+          <div class="cc-location">
+            <span id="hNow">Loading…</span>
+          </div>
+          <div class="cc-main">
+            <div class="cc-icon-wrap wx-icon wx-icon-big" id="iconNow"></div>
+            <div>
+              <div class="cc-temp" id="tNow">—</div>
+              <div class="cc-sky"  id="shortNow"></div>
+            </div>
+          </div>
+          <div class="cc-detail" id="detailNow"></div>
+        </div>
+
+        <div class="cc-metrics">
+          <div class="cc-metric" id="mFeels"    aria-label="Feels like"></div>
+          <div class="cc-metric" id="mHumidity" aria-label="Humidity"></div>
+          <div class="cc-metric" id="mWind"     aria-label="Wind"></div>
+          <div class="cc-metric" id="mGust"     aria-label="Gusts"></div>
+          <div class="cc-metric" id="mDew"      aria-label="Dewpoint"></div>
+          <div class="cc-metric" id="mBaro"     aria-label="Barometer"></div>
+          <div class="cc-metric" id="mVis"      aria-label="Visibility"></div>
+          <div class="cc-metric full" id="mTimes" aria-label="Observation time"></div>
+        </div>
+
+        <!-- Sun & UV chip -->
+        <div class="cc-sun-row" id="sunRow">
+
+          <!-- Sunrise -->
+          <div class="cc-sun-chip" aria-label="Sunrise">
+            <svg class="sunrise-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- horizon line -->
+              <line x1="2" y1="17" x2="22" y2="17" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+              <!-- sun body -->
+              <circle cx="12" cy="13" r="4" fill="#fbbf24" opacity="0.9"/>
+              <!-- rays rising upward -->
+              <g class="sr-rays">
+                <line x1="12" y1="4"   x2="12" y2="6"   stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="17.5" y1="6" x2="16.2" y2="7.2" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="6.5"  y1="6" x2="7.8"  y2="7.2" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="20"   y1="11" x2="18"  y2="11"  stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="4"    y1="11" x2="6"   y2="11"  stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+              </g>
+              <!-- upward arrow below horizon -->
+              <g class="sr-glow">
+                <polyline points="10,21 12,19 14,21" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.7"/>
+              </g>
+            </svg>
+            <div class="sun-chip-text">
+              <span class="sun-chip-label">Sunrise</span>
+              <span class="sun-chip-value" id="sSunriseVal">—</span>
+            </div>
+          </div>
+
+          <!-- Sunset -->
+          <div class="cc-sun-chip" aria-label="Sunset">
+            <svg class="sunset-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- warm glow on horizon -->
+              <ellipse class="ss-glow" cx="12" cy="16" rx="9" ry="2.5" fill="#f97316" opacity="0.18"/>
+              <!-- horizon line -->
+              <line x1="1" y1="16" x2="23" y2="16" stroke="#f97316" stroke-width="1.2" stroke-linecap="round" opacity="0.55"/>
+              <!-- sun half-submerged -->
+              <clipPath id="aboveHorizon">
+                <rect x="0" y="0" width="24" height="16"/>
+              </clipPath>
+              <circle cx="12" cy="16" r="5" fill="#f97316" opacity="0.95" clip-path="url(#aboveHorizon)"/>
+              <!-- three short rays only above horizon -->
+              <g class="ss-rays">
+                <line x1="12" y1="5"    x2="12" y2="7.5"  stroke="#f97316" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="18.5" y1="8"  x2="17" y2="9.5"  stroke="#f97316" stroke-width="1.5" stroke-linecap="round"/>
+                <line x1="5.5"  y1="8"  x2="7"  y2="9.5"  stroke="#f97316" stroke-width="1.5" stroke-linecap="round"/>
+              </g>
+            </svg>
+            <div class="sun-chip-text">
+              <span class="sun-chip-label">Sunset</span>
+              <span class="sun-chip-value" id="sSunsetVal">—</span>
+            </div>
+          </div>
+
+          <!-- UV Index -->
+          <div class="cc-sun-chip cc-uv-chip" id="sUV" aria-label="UV Index">
+            <div class="uv-top-row">
+              <svg class="uv-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="4.5" fill="#fbbf24"/>
+                <g class="uv-rays">
+                  <line x1="12" y1="2"    x2="12" y2="4.5"  stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="12" y1="19.5" x2="12" y2="22"   stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="2"  y1="12"   x2="4.5" y2="12"  stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="19.5" y1="12" x2="22"  y2="12"  stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="5.2"  y1="5.2" x2="7"   y2="7"  stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="17"   y1="17"  x2="18.8" y2="18.8" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="18.8" y1="5.2" x2="17"   y2="7"  stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                  <line x1="7"    y1="17"  x2="5.2"  y2="18.8" stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"/>
+                </g>
+              </svg>
+              <div class="uv-label-row">
+                <span id="sUVLabel"></span>
+                <span id="sUVNum"></span>
+              </div>
+            </div>
+            <div class="uv-bar-track">
+              <div class="uv-bar-fill" id="sUVBar"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Extra info chips: AQI, Pollen, Precip, Snow, Moon, Historical -->
+        <div class="cc-extra-row" id="extraRow">
+          <div class="cc-extra-chip" id="eAQI"    aria-label="Air Quality"></div>
+          <div class="cc-extra-chip" id="ePollen" aria-label="Pollen"></div>
+          <div class="cc-extra-chip" id="ePrecip" aria-label="Precipitation"></div>
+          <div class="cc-extra-chip" id="eSnow"   aria-label="Snow"></div>
+          <div class="cc-extra-chip" id="eMoon"   aria-label="Moon Phase"></div>
+          <div class="cc-extra-chip" id="eHist"   aria-label="Historical"></div>
+        </div>
+
+        <div class="cc-hourly">
+          <div class="cc-hourly-label">Next 24 Hours</div>
+          <div class="cc-hourly-scroll" id="hourlyStrip">
+            <div style="font-size:0.8rem;color:var(--text-3);padding:8px 0">Loading…</div>
+          </div>
+        </div>
+
+        <div class="cc-temprange">
+          <div class="cc-hourly-label">7-Day Temperature Range</div>
+          <div id="tempRangeBars"></div>
+        </div>
+
+        <div class="cc-error" id="errNow"></div>
+      </div>
+
+      <!-- 7-Day Forecast + Facebook Card stacked -->
+      <div style="display:flex; flex-direction:column; gap:20px; min-width:0; align-self:stretch; overflow:visible;">
+
+        <div class="glass overflow-visible" style="flex:1; min-height:0; display:flex; flex-direction:column; overflow:visible;">
+          <div class="section-head">
+            <h2>7-Day Forecast</h2>
+            <div id="weeklyOutlook" style="font-size:0.72rem; color:var(--text-3); font-style:italic; margin-top:4px; line-height:1.4; padding: 0 2px;"></div>
+          </div>
+          <div class="forecast-grid" id="forecastBox"></div>
+          <div class="cc-error" id="errForecast"></div>
+        </div>
+
+        <!-- Facebook follow card -->
+        <div class="glass fb-card" style="flex-shrink:0;">
+          <div class="fb-card-logo">
+            <img src="data:image/webp;base64,UklGRjAKAABXRUJQVlA4ICQKAACQKwCdASqgAKAAPrVYpk0nJaOiJnZp6OAWiWRu40T0mQ2kiz2TzVOZe6zYfbLyaH9PQB/hPUG/yfQE8xfmk/5v9tvdJ+0HVPf8j2HP7j/pPYY/bL1nfVh/yGCX9h3+m8KfI18ezZ/6Dwk9PeZn02facOfAC9obt6ADqr9RHvH/yvRX8+f8z4bH1j/m+wN+mfR10HKhpHFTuXiRUGTEioMkdVhQ5FTPD0Hy261fdyPKrEvVhOvmBXbyLLtsor2mU5oQlGh6lMxQz8Qz+b1GxGjSeYJ1BQTPQ368LsxnHTJ8lZEaXEh7Gj1XRaIm/nnhkzc2foFLMR+MxlcuRPgx237E5GVhUj5Z5pAxpK6+CCd6J1d7N2ctzCl46DncWelOTq4dQuYAdKEBnkG0utj3s34m2dntWaJ7ZyFeFx0HiNTx2ESmLcncN7QUOsPbvrziyFazGtz+9C90zPEiroj9O5gp88S6bAAA/vzkf//8rQ/Az9YHzOf/+WebPNnTl61TV/JEDCFsxAAMwDL8/I7jiJ4JdtN9f/MfipZ0G47+LxtpKPnUsw6f8NJjaGL4VMyueLmeKZa7LPFfKhgCpgdz8O2ns2XN4VWMduATpc2sqHDR8DMViMDmt+/lagPNUPIGLteWZ1t5MGWO22VHs+wIvcyPFHgu3I+sAhBO4MPsKRnjipnhFe3SChM1M/G+BS7DM8ZpJ0t0DeYLeujgSuc5Kor05jdlA+MQuQ1twE5yfE6m5lUsXoGBpL4qrplr9hjMnpFDTcQ9JsZRQUkKIgAQvX6ipCOqnySnm0+yk5PrxV0/NzT9kfv0W5lhz5jofuGDr1VBFLarXBUoJ1Zs3NV2xLCrVogcRXBtryg02f+mcVLg94u4mgnev9zJDkiPvxpMDpPxJ2wWzCCYd3L/EHXaViaLTL+wJx/cPNNRT2UjM+Rjx1ljtXfQIM/PY3fE6rdqF4FbnPdAyFj9i9arhyCXqflKJJbO0Vbgg7CVwWQAMVXRmutEOtmJD2+9NEVzSMgZb04fIxLwch7WaTzkN/ZZNfOwlgiViFUMtKkTs9Fp8huZb6+e97ZuOtji+j8Zzm69LEnN5qIbvdY/pJHcJDtpCja+CuYsNwSLbfqKs2oc90Jca1bTZmX5aWfoi673oCmkWKhqKjJMHSGXkzcYFkg8JIt3GxcGWSDeWLj5NDdBuTq+Vg3/a1hEBtj1jzLG2UxkBQsEFvu0XXwatyyqvX567KFZTHSBNza3bB2pCrh4Lf5bFu+4j+9SbhlpiHUj085MQJziUMb1IQnSJgCk2dTtKStEEjdP7y1f2sGkQ5EvztM9Mo5PJCfAJZsECcO/dNWS0gsBgCal2fUcK/HwF7ue/yic6/yoKYz9ERkD7s/6qJG+18i0sPtkzsXYdr5pM3gtJmZh1NlzBFGmM1GXbL6fm84HwFk7Ui9uEFbof21JR0nLbCSS2zC3kfhBfEkqwZLLhlAqnurHF+FYMOyaIGcnuhSoZ9XbTQUYAwkWjFz7k4lc90XuWsTqvQBNjo/J1rRea5YKN5SsFHYf4eMEI4xj+8vrDNlHuCDsX9TAgwoNVZYp0jOFGdKLa8a0DIxZzHegSe5t4SsL/1qjCjjPzEl2BPLytbWIJk6xhRfMd3sybpjjVUGnto/f7eqyZe8izxvBdg7UaV6GVd9RPFe7qAW2ULrC9x/peX6UlNo2SdfWETfP8rGGVaAOQSiM8pkPCfHH/ibKapn1N2aV4+hZSDNwi6Fi93T+kAPYZ4OZ7tdJ9fogecmWTp/nFzt5j7g/7RY2K8+9noty6m6h/K9dGdonGPayueGirDBG7NpzcgEJgQSyE4kaOLCsLv9QhL+pAXnr0NHR4J5cyW2EpnSrwUBSdl+RaaxHkhFu2ZMk70RxgvVA/rhhUuoYI2odOh77fNr9zbb5JoQvG3RWbaW2ujVvViuTS4XsIy6Yz+jfN+pSg/7TmY1uu8lsv9BY3wmUsJ8UXzqiAyOmsPKRI3Sk4R8b7wwnrQVxqcgKWMFDlpnONc0QHP8wVVdIXrPj0E+jlCiuJtYwyfHQRAIgdYHEqyp3Yuy0woYZxVkCFw2WTd5fmuWJ87ncSFc0W3n7RlTaGE6JR4M91kMxRB9U5QXbqbRJgH1/DEN3rJ3XxJLHqejBFXNhIqGwUhttXyvIhaU7k8PhAY5SAXOgFyTnEYo0gsc2C3m+Jl/nYwmEeq2CKTht0CdsRbYMcc1Qb3PSqp437nwrHOL6n1l5AJZtWQ/PuWIqHQdhAVVXGhT8rQUsbxHpJYSEMJ1ojDxN6SmVrAqNjUd24i6eSyrgP8bawhes1yEEwr0kRSG/pmHjlgG1fa1rODfAK1Dsyv9geachFhazHHTABUji/ExPWs1uyAB1m2jD4HoJiqmVIpTi1ldCYVxZEqyVTtTAIGIqyAqqZp3Aw4yjP8lwqP0FekgrjycZa+o4nSQwcWQ1f9+BY4SBi0C0Q/sVowrIBeR/Vg26oEKRTMLtvXGZdeKPLV5E0CpgiI9HnUFPhZJe8jeHu8o0vl58coa8dY3+Jo8AqpTkShbprqbDyeWJHMLfNLtIDks2bpAIanOkQVNMQIl4aWuuROot1rqYrBISdy0n+wh7WTa40Q1YgQl+inoeKWPCMQIZjJ0Tm93OWVgTjvEYsQ1o9I4PI5t9eaHYBZbaUXUW/BW3dkHV6xMyQmSGSp0MuoOGUjiq17MTn8cPFF8RKlkA+QYBbGFV+14KWtdIUZWhrByzlraEebxXzeCDStYSfDXF3To9/xWSQ35YGi+iQSS0exyP2EGsVfu65zeVjKMAzUF8QCU7yH6nbO79Jm8dVGqU4S01IjwgxkPWVbyhH664/pii6ZmNQXzlQPnC9nys6Jq5quM6xRhpzfeg0cMEh/1OYaqiLE8tQ+Kn+iG366ECt7mDOfITZEuikJKgCGzO932ogaMeJ7bwWumSWz3uSRO7Suq/+v8u9uL13102L55oNtVxUvwR7zIs5tGikFAWlKyBTNBW0kWQ9FzJCZr2U9ktfS0SVeoUZQhr/SdzFLU5fScX75dXT5aGp3AYIq2WOEojtHsfxDO//6Q+OabYVQ9HkqgQeIcK8T3Q0RM2zz9pG05C2WfMT6Xk2m1b3W4uLOrr9AKTxu43MD5EJ73AeVbM5nhOp7AAkBVkzQP/P5/NhlAascri39M4VleGriOsbFbqIRNU2tsXuUKo9Oka72bEL/tG8y0RAh4t6XMNnxkLcoq7pE6B2TMYzO1fOmXihlS5++j+Ie/YvVbex3PYUnerMVXIMtMeLdbv/11G61FwZWgMJYZVrBZDgXadWbk0RMKekUBxYhY7OjJMDgIN6oC28sW+RnntTbI3/BmFqqMV9p0AoPDYCK7z91NbpUe5+/nFU9l4nlUWOFfBTfH2tQ3Vo1WRxKpkVZUTYj2kRdCQa613+Ysr4WxO4NjMNzQeR0fgfU9cDQAAAAAA" alt="Xavier's Weather Channel" width="80" height="80" style="border-radius:12px; display:block;"/>
+          </div>
+          <div class="fb-card-text">
+            <div class="fb-card-name">Xavier's Weather Channel</div>
+            <div class="fb-card-sub">Follow us on Facebook for live updates, storm alerts, and weather discussion for Tuscarawas County.</div>
+          </div>
+          <a class="fb-card-btn" href="https://www.facebook.com/XaviersWeatherChannel" target="_blank" rel="noopener">
+            Follow Page
+          </a>
+        </div>
+
+      </div>
+
+    </div><!-- /hero-row -->
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row">
+
+      <!-- RSS Feed -->
+      <div class="glass" style="overflow:hidden;">
+        <div class="section-head">
+          <h2>Latest Updates</h2>
+        </div>
+        <div id="rssFeed" class="rss-feed">
+          <div class="rss-loading">Loading updates…</div>
+        </div>
+      </div>
+
+      <!-- Live Radar -->
+      <div class="glass" style="overflow:hidden; padding:0; display:flex; flex-direction:column;">
+        <div class="section-head" style="padding:18px 22px 14px;">
+          <h2>Live Radar</h2>
+        </div>
+        <iframe
+          title="Live Radar"
+          src="https://embed.windy.com/embed2.html?lat=40.49&lon=-81.44&zoom=7&overlay=radar"
+          style="flex:1; width:100%; border:0;"
+          height="620">
+        </iframe>
+      </div>
+
+    </div><!-- /bottom-row -->
+
+    <!-- FUN FACT + ON THIS DAY COMBINED CARD -->
+    <div class="funfact-card" style="flex-direction:column; gap:0; padding:0; overflow:hidden;">
+
+      <!-- Fun Fact row -->
+      <div style="display:flex; align-items:flex-start; gap:16px; padding:22px 28px;">
+        <div class="funfact-icon" id="funfactIcon">🌤️</div>
+        <div class="funfact-body" style="flex:1;">
+          <div class="funfact-label" id="funfactLabel">Weather Fact of the Day</div>
+          <div class="funfact-text loading" id="funfactText">Loading…</div>
+        </div>
+        <button class="funfact-refresh" id="funfactBtn" title="Get another" aria-label="Refresh fact">↻</button>
+      </div>
+
+      <!-- Divider -->
+      <div style="height:1px; background:var(--glass-border); margin:0 20px;"></div>
+
+      <!-- On This Day row -->
+      <div style="display:flex; align-items:flex-start; gap:16px; padding:22px 28px;">
+        <div class="funfact-icon">📅</div>
+        <div class="funfact-body" style="flex:1;">
+          <div class="funfact-label" id="otdLabel">On This Day in Tuscarawas County</div>
+          <div class="funfact-text" id="otdText"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- STORM TRACKER SAFETY TIPS (shown only during storm mode) -->
+    <div id="stormSafetyPanel" style="display:none;">
+      <div class="funfact-card" style="border-color:rgba(220,38,38,0.4); background:rgba(127,29,29,0.25);">
+        <div class="funfact-icon">🚨</div>
+        <div class="funfact-body">
+          <div class="funfact-label" style="color:#fca5a5;">Severe Weather Safety</div>
+          <div class="funfact-text" id="stormSafetyText" style="color:#fecaca;"></div>
+        </div>
+        <button class="funfact-refresh" id="stormSafetyBtn" title="Next tip" aria-label="Next safety tip" style="color:#f87171;">↻</button>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+</div><!-- /page -->
+
+<footer class="site-footer">
+  &copy; 2018 &ndash; <span id="footerYear"></span> Xavier's Weather Channel &nbsp;&middot;&nbsp; Tuscarawas County, Ohio
+</footer>
+
+<script>
+// Global JSONP callback slot for Blogger feed
+window.__bloggerCb = null;
+</script>
+<script type="module">
+// ============================================================
+// CONFIG
+// ============================================================
+const HEADERS             = { "Accept": "application/geo+json" };
+const ALERT_ZONE          = "OHZ039";
+const ALERT_COUNTY        = "OHC157"; // Tuscarawas County FIPS — catches tornado/severe watches
+const STATION_ID          = "KPHD";
+const FORECAST_URL        = "https://api.weather.gov/gridpoints/PBZ/28,62/forecast";
+const FORECAST_HOURLY_URL = "https://api.weather.gov/gridpoints/PBZ/28,62/forecast/hourly";
+const OPEN_METEO_URL      = "https://api.open-meteo.com/v1/forecast?latitude=40.4756&longitude=-81.4467" +
+  "&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m" +
+  ",wind_gusts_10m,dew_point_2m,surface_pressure,visibility,weather_code,is_day,uv_index" +
+  "&daily=sunrise,sunset,uv_index_max,precipitation_sum,snowfall_sum,precipitation_hours" +
+  "&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FNew_York";
+
+const AQI_URL = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.4756&longitude=-81.4467" +
+  "&current=us_aqi,pm2_5,pm10,ozone" +
+  "&hourly=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,ragweed_pollen,olive_pollen" +
+  "&timezone=America%2FNew_York&forecast_days=1";
+
+const CLIMATE_URL = "https://climate-api.open-meteo.com/v1/climate?latitude=40.4756&longitude=-81.4467" +
+  "&start_date=1991-01-01&end_date=2020-12-31" +
+  "&models=EC_Earth3P_HR" +
+  "&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit";
+
+// ============================================================
+// SVG ICONS
+// ============================================================
+function svgIcon(type, size) {
+  const s = size === "small" ? "wx-icon-small" : size === "med" ? "wx-icon-med" : "wx-icon-big";
+
+  // Shared SVG fragments
+  const SUN_CORE  = `<circle cx="32" cy="32" r="12" fill="#FCD34D"/><g class="sun-rays" stroke="#F59E0B" stroke-width="3"><line x1="32" y1="6" x2="32" y2="16"/><line x1="32" y1="48" x2="32" y2="58"/><line x1="6" y1="32" x2="16" y2="32"/><line x1="48" y1="32" x2="58" y2="32"/><line x1="14" y1="14" x2="20" y2="20"/><line x1="44" y1="44" x2="50" y2="50"/><line x1="14" y1="50" x2="20" y2="44"/><line x1="44" y1="20" x2="50" y2="14"/></g>`;
+  const MOON_CORE = `<g class="moon-body"><path d="M38 20 A14 14 0 1 0 38 44 A10 10 0 1 1 38 20Z" fill="#E2E8F0"/></g>`;
+  const CLOUD_LG  = `<g class="cloud-body" fill="#CBD5E1"><circle cx="24" cy="32" r="10"/><circle cx="36" cy="30" r="12"/><circle cx="46" cy="34" r="9"/><rect x="20" y="32" width="28" height="12" rx="6"/></g>`;
+  const CLOUD_SM  = `<g class="cloud-body" fill="#94A3B8"><circle cx="24" cy="26" r="9"/><circle cx="36" cy="24" r="11"/><circle cx="46" cy="28" r="8"/><rect x="20" y="26" width="28" height="11" rx="6"/></g>`;
+  const CLOUD_DIM = `<g class="cloud-body" fill="#CBD5E1"><circle cx="24" cy="26" r="9"/><circle cx="36" cy="24" r="11"/><circle cx="46" cy="28" r="8"/><rect x="20" y="26" width="28" height="11" rx="6"/></g>`;
+  const RAIN_DROPS= `<g class="rain-drops" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round"><line x1="24" y1="38" x2="22" y2="46"/><line x1="32" y1="40" x2="30" y2="48"/><line x1="40" y1="38" x2="38" y2="46"/><line x1="48" y1="40" x2="46" y2="48"/></g>`;
+  const SNOW_FLAKES=`<g class="snow-flakes" fill="#93C5FD"><circle cx="26" cy="42" r="2.5"/><circle cx="34" cy="47" r="2.5"/><circle cx="42" cy="42" r="2.5"/></g>`;
+  const BOLT      = `<g class="storm-bolt" fill="#FDE047" stroke="#EAB308" stroke-width="1"><polygon points="30,34 36,34 33,42 38,42 29,54 32,44 27,44"/></g>`;
+  const FOG_BANDS = `<g class="fog-bands" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"><line x1="16" y1="38" x2="48" y2="38"/><line x1="18" y1="44" x2="46" y2="44"/><line x1="20" y1="50" x2="44" y2="50"/></g>`;
+  const FOG_CLOUD = `<g class="cloud-body" fill="#CBD5E1"><circle cx="24" cy="24" r="9"/><circle cx="36" cy="22" r="11"/><circle cx="46" cy="26" r="8"/><rect x="20" y="24" width="28" height="10" rx="6"/></g>`;
+  const WIND_LINES= `<g class="wind-gusts" stroke="#93C5FD" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="28" x2="52" y2="28"/><line x1="12" y1="36" x2="44" y2="36"/><line x1="12" y1="44" x2="48" y2="44"/></g>`;
+
+  const icons = {
+    // ── Daytime ──────────────────────────────────────────────
+    sun:          `<svg class="${s} wx-sun"    viewBox="0 0 64 64" aria-hidden="true">${SUN_CORE}</svg>`,
+    partly:       `<svg class="${s} wx-partly" viewBox="0 0 64 64" aria-hidden="true"><g class="sun-rays" stroke="#F59E0B" stroke-width="2.5"><line x1="20" y1="8" x2="22" y2="16"/><line x1="10" y1="18" x2="17" y2="22"/><line x1="8"  y1="30" x2="16" y2="30"/><line x1="12" y1="42" x2="18" y2="38"/></g><circle cx="22" cy="28" r="10" fill="#FCD34D"/><g class="cloud-body" fill="#CBD5E1"><circle cx="34" cy="36" r="10"/><circle cx="46" cy="38" r="8"/><circle cx="26" cy="40" r="8"/><rect x="22" y="38" width="28" height="10" rx="5"/></g></svg>`,
+    chancerain:   `<svg class="${s} wx-chancerain" viewBox="0 0 64 64" aria-hidden="true"><g class="sun-rays" stroke="#F59E0B" stroke-width="2.5"><line x1="18" y1="6"  x2="20" y2="14"/><line x1="8"  y1="16" x2="15" y2="20"/><line x1="6"  y1="28" x2="14" y2="28"/><line x1="10" y1="40" x2="16" y2="36"/></g><circle cx="20" cy="26" r="9" fill="#FCD34D"/><g class="cloud-body" fill="#94A3B8"><circle cx="32" cy="30" r="9"/><circle cx="44" cy="32" r="8"/><circle cx="24" cy="34" r="7"/><rect x="20" y="32" width="26" height="9" rx="4"/></g><g class="rain-drops" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"><line x1="28" y1="44" x2="26" y2="51"/><line x1="36" y1="46" x2="34" y2="53"/><line x1="44" y1="44" x2="42" y2="51"/></g></svg>`,
+    cloud:        `<svg class="${s} wx-cloud"  viewBox="0 0 64 64" aria-hidden="true">${CLOUD_LG}</svg>`,
+    rain:         `<svg class="${s} wx-rain"   viewBox="0 0 64 64" aria-hidden="true">${CLOUD_SM}${RAIN_DROPS}</svg>`,
+    snow:         `<svg class="${s} wx-snow"   viewBox="0 0 64 64" aria-hidden="true">${CLOUD_DIM}${SNOW_FLAKES}</svg>`,
+    fog:          `<svg class="${s} wx-fog"    viewBox="0 0 64 64" aria-hidden="true">${FOG_CLOUD}${FOG_BANDS}</svg>`,
+    storm:        `<svg class="${s} wx-storm"  viewBox="0 0 64 64" aria-hidden="true">${CLOUD_SM}${BOLT}</svg>`,
+    windy:        `<svg class="${s} wx-windy"  viewBox="0 0 64 64" aria-hidden="true">${WIND_LINES}</svg>`,
+    mostlysunny:  `<svg class="${s} wx-mostlysunny" viewBox="0 0 64 64" aria-hidden="true">${SUN_CORE}<g fill="#E2E8F0" opacity="0.6"><circle cx="42" cy="44" r="7"/><circle cx="52" cy="46" r="5"/><circle cx="36" cy="47" r="5"/><rect x="33" y="45" width="21" height="7" rx="3"/></g></svg>`,
+
+    // ── Nighttime ─────────────────────────────────────────────
+    moon:         `<svg class="${s} wx-moon"        viewBox="0 0 64 64" aria-hidden="true">${MOON_CORE}</svg>`,
+    moonclear:    `<svg class="${s} wx-moonclear"   viewBox="0 0 64 64" aria-hidden="true">${MOON_CORE}<g fill="#CBD5E1" opacity="0.35"><circle cx="48" cy="48" r="6"/><circle cx="56" cy="50" r="4"/><circle cx="42" cy="51" r="4"/><rect x="39" y="49" width="19" height="6" rx="3"/></g></svg>`,
+    moonpartly:   `<svg class="${s} wx-moonpartly"  viewBox="0 0 64 64" aria-hidden="true"><g class="moon-body"><path d="M28 14 A12 12 0 1 0 28 38 A8 8 0 1 1 28 14Z" fill="#E2E8F0"/></g><g class="cloud-body" fill="#94A3B8"><circle cx="38" cy="40" r="9"/><circle cx="50" cy="42" r="7"/><circle cx="30" cy="44" r="7"/><rect x="26" y="42" width="26" height="9" rx="4"/></g></svg>`,
+    mooncloud:    `<svg class="${s} wx-mooncloud"    viewBox="0 0 64 64" aria-hidden="true"><g class="moon-body"><path d="M24 12 A11 11 0 1 0 24 34 A7 7 0 1 1 24 12Z" fill="#CBD5E1" opacity="0.7"/></g>${CLOUD_LG}</svg>`,
+    moonrain:     `<svg class="${s} wx-moonrain"     viewBox="0 0 64 64" aria-hidden="true"><g class="moon-body"><path d="M22 10 A10 10 0 1 0 22 30 A7 7 0 1 1 22 10Z" fill="#94A3B8" opacity="0.7"/></g>${CLOUD_SM}${RAIN_DROPS}</svg>`,
+    moonsnow:     `<svg class="${s} wx-moonsnow"     viewBox="0 0 64 64" aria-hidden="true"><g class="moon-body"><path d="M22 10 A10 10 0 1 0 22 30 A7 7 0 1 1 22 10Z" fill="#CBD5E1" opacity="0.7"/></g>${CLOUD_DIM}${SNOW_FLAKES}</svg>`,
+    moonstorm:    `<svg class="${s} wx-moonstorm"    viewBox="0 0 64 64" aria-hidden="true"><g class="moon-body"><path d="M22 10 A10 10 0 1 0 22 30 A7 7 0 1 1 22 10Z" fill="#94A3B8" opacity="0.6"/></g>${CLOUD_SM}${BOLT}</svg>`,
+    moonfog:      `<svg class="${s} wx-moonfog"      viewBox="0 0 64 64" aria-hidden="true"><g class="moon-body"><path d="M22 10 A10 10 0 1 0 22 30 A7 7 0 1 1 22 10Z" fill="#CBD5E1" opacity="0.6"/></g>${FOG_CLOUD}${FOG_BANDS}</svg>`,
+  };
+  return icons[type] || icons.cloud;
+}
+
+// Map a condition text + isNight flag to an icon type
+function resolveIcon(text, isNight) {
+  const f = (text || "").toLowerCase();
+  // METAR present weather codes (ra=rain, sn=snow, ts=thunder, fg=fog, dz=drizzle, pl=sleet)
+  if (/\bts\b|-?ts\b|\+?ts/.test(f) || f.includes("storm") || f.includes("thunder"))       return isNight ? "moonstorm" : "storm";
+  if (/\b(sn|pl|blsn)\b/.test(f)    || f.includes("snow")  || f.includes("sleet") || f.includes("flurr")) return isNight ? "moonsnow" : "snow";
+  if (/\b(fg|br|hz|fu)\b/.test(f)   || f.includes("fog")   || f.includes("mist")  || f.includes("haze"))  return isNight ? "moonfog"  : "fog";
+  if (/\b(ra|dz|shra|sh)\b/.test(f) || f.includes("rain")  || f.includes("shower") || f.includes("drizzle")) {
+    if (f.includes("chance") || f.includes("slight") || f.includes("scattered"))  return isNight ? "moonrain" : "chancerain";
+    return isNight ? "moonrain" : "rain";
+  }
+  if (f.includes("wind")   || f.includes("breezy")  || f.includes("blustery"))   return "windy";
+  if (f.includes("mostly sunny") || (!isNight && f.includes("mostly clear")))     return "mostlysunny";
+  if (f.includes("mostly clear"))                                                  return "moonclear";
+  if (f.includes("partly") || f.includes("few clouds"))                           return isNight ? "moonpartly" : "partly";
+  if (f.includes("cloud")  || f.includes("overcast"))                             return isNight ? "mooncloud"  : "cloud";
+  if (f.includes("clear")  || f.includes("fair"))                                 return isNight ? "moon"       : "sun";
+  if (f.includes("sunny"))                                                         return "sun";
+  return isNight ? "moon" : "cloud";
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function cToF(c)          { return (c == null || isNaN(c)) ? null : c * 9/5 + 32; }
+function metersToMiles(m) { return (m == null || isNaN(m)) ? null : m / 1609.344; }
+function paToInHg(pa)     { return (pa == null || isNaN(pa)) ? null : pa / 3386.389; }
+
+function toMPH(v, u) {
+  if (v == null || isNaN(v)) return null;
+  const ul = (u || "").toLowerCase();
+  if (ul.includes("km_h"))  return v * 0.621371;
+  if (ul.includes("m_s"))   return v * 2.23694;
+  if (ul.includes("knot"))  return v * 1.15078;
+  return v;
+}
+
+function formatTime(d) {
+  let h = d.getHours(), m = String(d.getMinutes()).padStart(2, "0");
+  const ap = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}:${m} ${ap}`;
+}
+
+const DIRS = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+function degToDir(d) { return (d == null || isNaN(d)) ? "" : DIRS[Math.floor(((d % 360) / 22.5) + 0.5) % 16]; }
+function dirArrow(d) {
+  if (d == null || isNaN(d)) return "";
+  if (d >= 337.5 || d < 22.5) return "↑";
+  if (d < 67.5)  return "↗"; if (d < 112.5) return "→";
+  if (d < 157.5) return "↘"; if (d < 202.5) return "↓";
+  if (d < 247.5) return "↙"; if (d < 292.5) return "←";
+  return "↖";
+}
+
+function iconTypeFromObs(obs, isNight) {
+  if (!obs) return resolveIcon("", isNight);
+  const pw = (obs.presentWeather || [])
+    .map(p => p.rawString || [p.intensity, p.modifier, p.weather].filter(Boolean).join(" "))
+    .join(" ").toLowerCase();
+  if (pw) { const t = resolveIcon(pw, isNight); if (!t.includes("moon") || isNight) return t; }
+  if (obs.textDescription) return resolveIcon(obs.textDescription, isNight);
+  if (obs.icon) {
+    try {
+      const path  = obs.icon.toLowerCase().match(/\/icons\/[^?]*/)?.[0] || "";
+      const codes = path.split(/[/,?]/).filter(Boolean);
+      for (const c of codes) {
+        if (c.includes("ts")    || c.includes("thunder"))                        return isNight ? "moonstorm"  : "storm";
+        if (c.includes("sn")    || c.includes("snow") || c.includes("blizzard")) return isNight ? "moonsnow"   : "snow";
+        if (c.includes("ra")    || c.includes("shra") || c.includes("rain"))     return isNight ? "moonrain"   : "rain";
+        if (c.includes("fg")    || c.includes("mist") || c.includes("haze"))     return isNight ? "moonfog"    : "fog";
+        if (c.includes("wind")  || c.includes("breezy"))                          return "windy";
+        if (c.includes("sct")   || c.includes("few"))                             return isNight ? "moonpartly" : "partly";
+        if (c.includes("bkn")   || c.includes("ovc"))                             return isNight ? "mooncloud"  : "cloud";
+        if (c.includes("skc")   || c.includes("clear"))                           return isNight ? "moon"       : "sun";
+      }
+    } catch (e) {}
+  }
+  return resolveIcon("", isNight);
+}
+
+function skyText(obs) {
+  if (!obs) return null;
+  if (obs.textDescription?.trim()) return obs.textDescription.trim();
+  if (Array.isArray(obs.cloudLayers) && obs.cloudLayers.length) {
+    const a = obs.cloudLayers[0].amount;
+    if (a === "FEW") return "Mostly Sunny";
+    if (a === "SCT") return "Partly Cloudy";
+    if (a === "BKN") return "Mostly Cloudy";
+    if (a === "OVC") return "Overcast";
+  }
+  return null;
+}
+
+// Map Open-Meteo WMO weather code to a condition string
+function omCodeToText(code, isDay) {
+  if (code === 0)               return isDay ? "Sunny"           : "Clear";
+  if (code === 1)               return isDay ? "Mostly Clear"    : "Mostly Clear";
+  if (code === 2)               return isDay ? "Partly Cloudy"   : "Partly Cloudy";
+  if (code === 3)               return "Overcast";
+  if ([45,48].includes(code))   return "Fog";
+  if ([51,53].includes(code))   return "Drizzle";
+  if (code === 55)              return "Heavy Drizzle";
+  if ([61,63].includes(code))   return "Rain";
+  if (code === 65)              return "Heavy Rain";
+  if ([71,73].includes(code))   return "Snow";
+  if (code === 75)              return "Heavy Snow";
+  if (code === 77)              return "Snow Grains";
+  if ([80,81].includes(code))   return "Rain Showers";
+  if (code === 82)              return "Heavy Rain Showers";
+  if ([85,86].includes(code))   return "Snow Showers";
+  if ([95,96,99].includes(code))return "Thunderstorm";
+  return "Cloudy";
+}
+
+function applyTheme(summary, isNight) {
+  const body  = document.body;
+  const month = new Date().getMonth(); // 0=Jan
+  const isFall   = month >= 8 && month <= 10;  // Sept–Nov
+  const isWinter = month === 11 || month <= 1; // Dec–Feb
+
+  ["wx-sunny","wx-cloudy","wx-rainy","wx-snowy","wx-stormy","wx-foggy","wx-night","wx-winter"].forEach(c => body.classList.remove(c));
+
+  const f = (summary || "").toLowerCase();
+  let wxMode = "none";
+  if      (f.includes("storm")  || f.includes("thunder"))                         { body.classList.add("wx-stormy"); wxMode = "storm"; }
+  else if (f.includes("snow")   || f.includes("sleet") || f.includes("blizzard")) { body.classList.add("wx-snowy");  wxMode = "snow";  }
+  else if (f.includes("rain")   || f.includes("shower") || f.includes("drizzle")) { body.classList.add("wx-rainy");  wxMode = "rain";  }
+  else if (f.includes("fog")    || f.includes("mist")  || f.includes("haze"))     { body.classList.add("wx-foggy");  wxMode = "fog";   }
+  else if (f.includes("cloud")  || f.includes("overcast"))                         { body.classList.add("wx-cloudy"); wxMode = "cloud"; }
+  else if (f.includes("sunny")  || f.includes("clear") || f.includes("fair"))     { body.classList.add("wx-sunny");  wxMode = isNight ? "stars" : "sun"; }
+  else                                                                              { wxMode = isNight ? "stars" : "none"; }
+
+  if (isNight) body.classList.add("wx-night");
+  if (isWinter) body.classList.add("wx-winter");
+
+  // Fall: overlay leaves on top of existing weather particles
+  if (isFall && !["storm","rain","snow"].includes(wxMode)) wxMode = "leaves";
+
+  if (window.setParticleMode) window.setParticleMode(wxMode);
+}
+
+// ============================================================
+// PARTICLE SYSTEM
+// ============================================================
+(function () {
+  const canvas = document.getElementById("wxCanvas");
+  const ctx    = canvas.getContext("2d");
+  let W, H, particles = [], animId, mode = "none", flashAlpha = 0;
+  let lightningBolts = [], lightningTimer = 0;
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  window.addEventListener("resize", () => { resize(); initParticles(mode); });
+  resize();
+
+  const makeRain  = () => ({ x: Math.random()*W, y: Math.random()*-H, len: 8+Math.random()*14, speed: 10+Math.random()*10, alpha: 0.2+Math.random()*0.3, w: 1+Math.random() });
+  const makeSnow  = () => ({ x: Math.random()*W, y: Math.random()*-H, r: 2+Math.random()*4, speed: 0.6+Math.random()*1.2, drift: (Math.random()-.5)*.5, alpha: 0.35+Math.random()*0.4, wobble: Math.random()*Math.PI*2, ws: 0.015+Math.random()*.02 });
+  const makeCloud = () => { const side = Math.random()<.5?-1:1; return { x: side===-1?-220:W+220, y: 20+Math.random()*H*.55, speed: (0.15+Math.random()*.2)*side, alpha: 0.08+Math.random()*.10, puffs: Array.from({length:5}, () => ({ dx:(Math.random()-.3)*70, dy:(Math.random()-.5)*30, r:18+Math.random()*28 })) }; };
+  const makeFog   = () => ({ x: Math.random()*W*1.4-W*.2, y: H*.3+Math.random()*H*.5, w: 180+Math.random()*260, h: 28+Math.random()*40, speed: (Math.random()-.5)*.2, alpha: 0.05+Math.random()*.07 });
+  const makeStorm = () => ({ x: Math.random()*W, y: Math.random()*-H, len: 14+Math.random()*18, speed: 16+Math.random()*10, alpha: 0.18+Math.random()*0.28, w: 1+Math.random()*1.2 });
+  const makeSun   = () => ({ x: Math.random()*W, y: H+Math.random()*60, r: 1+Math.random()*2.5, speed: 0.3+Math.random()*.5, drift: (Math.random()-.5)*.3, alpha: 0.12+Math.random()*.22 });
+
+  function makeLightningBolt(x) {
+    // Generate a jagged lightning path from top to ~60% down screen
+    const pts = [{ x, y: 0 }];
+    let cx = x, cy = 0;
+    const segments = 8 + Math.floor(Math.random() * 6);
+    for (let i = 0; i < segments; i++) {
+      cx += (Math.random() - 0.5) * 80;
+      cy += (H * 0.65) / segments;
+      pts.push({ x: cx, y: cy });
+    }
+    return { pts, alpha: 0.9 + Math.random() * 0.1, life: 1.0, branches: Math.random() < 0.5 };
+  }
+
+  const makeStar  = () => ({ x: Math.random()*W, y: Math.random()*H*0.85, r: 0.4+Math.random()*1.4, alpha: 0.2+Math.random()*0.7, twinkleSpeed: 0.008+Math.random()*0.015, twinkleOffset: Math.random()*Math.PI*2 });
+  const makeLeaf  = () => { const colors = ["#b45014","#c87814","#a03c0a","#dc8c1e","#8c3209"]; return { x: Math.random()*W, y: Math.random()*-H, color: colors[Math.floor(Math.random()*colors.length)], size: 5+Math.random()*9, speed: 0.8+Math.random()*1.4, drift: (Math.random()-.5)*0.8, wobble: Math.random()*Math.PI*2, ws: 0.02+Math.random()*0.03, rot: Math.random()*Math.PI*2, rotSpeed: (Math.random()-.5)*0.06, alpha: 0.5+Math.random()*0.4 }; };
+
+  const COUNT   = { rain:120, snow:80, cloud:7, fog:10, storm:150, sun:50, stars:120, leaves:60, none:0 };
+  const MAKERS  = { rain:makeRain, snow:makeSnow, cloud:makeCloud, fog:makeFog, storm:makeStorm, sun:makeSun, stars:makeStar, leaves:makeLeaf };
+
+  function initParticles(m) {
+    mode = m; particles = [];
+    const n = COUNT[m] || 0;
+    for (let i = 0; i < n; i++) particles.push(MAKERS[m]?.());
+    if (["rain","storm","snow"].includes(m)) particles.forEach(p => { if(p) p.y = Math.random()*H; });
+  }
+
+  function loop() {
+    animId = requestAnimationFrame(loop);
+    ctx.clearRect(0, 0, W, H);
+
+    if (mode === "storm") {
+      // Screen flash — subtler, less frequent
+      if (Math.random() < .0015) flashAlpha = 0.07 + Math.random()*.08;
+      if (flashAlpha > 0) {
+        ctx.fillStyle = `rgba(210,225,255,${flashAlpha})`;
+        ctx.fillRect(0, 0, W, H);
+        flashAlpha = Math.max(0, flashAlpha - .012);
+      }
+      // Spawn lightning bolts — less frequent
+      lightningTimer--;
+      if (lightningTimer <= 0) {
+        lightningBolts.push(makeLightningBolt(W * 0.15 + Math.random() * W * 0.7));
+        // Double flash occasionally (reduced chance)
+        if (Math.random() < 0.15) {
+          setTimeout(() => lightningBolts.push(makeLightningBolt(W * 0.15 + Math.random() * W * 0.7)), 150);
+        }
+        lightningTimer = 180 + Math.floor(Math.random() * 240);
+        flashAlpha = 0.06 + Math.random() * 0.07;
+      }
+      // Draw and fade bolts — dimmer, faster fade
+      lightningBolts = lightningBolts.filter(bolt => bolt.life > 0);
+      lightningBolts.forEach(bolt => {
+        ctx.save();
+        ctx.strokeStyle = `rgba(200,220,255,${bolt.alpha * bolt.life * 0.6})`;
+        ctx.lineWidth = 1.2 * bolt.life + 0.3;
+        ctx.shadowColor = "rgba(180,200,255,0.4)";
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.moveTo(bolt.pts[0].x, bolt.pts[0].y);
+        bolt.pts.slice(1).forEach(pt => ctx.lineTo(pt.x, pt.y));
+        ctx.stroke();
+        // Optional branch
+        if (bolt.branches && bolt.pts.length > 4) {
+          const bi = Math.floor(bolt.pts.length * 0.5);
+          ctx.beginPath();
+          ctx.moveTo(bolt.pts[bi].x, bolt.pts[bi].y);
+          ctx.lineTo(bolt.pts[bi].x + (Math.random()-0.5)*120, bolt.pts[bi].y + H * 0.2);
+          ctx.lineWidth = 0.6 * bolt.life;
+          ctx.stroke();
+        }
+        ctx.restore();
+        bolt.life -= 0.08;
+      });
+    }
+
+    particles.forEach(p => {
+      if (!p) return;
+      if (mode === "rain") {
+        ctx.save(); ctx.strokeStyle = `rgba(147,197,253,${p.alpha})`; ctx.lineWidth = p.w;
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x-2, p.y+p.len); ctx.stroke(); ctx.restore();
+        p.y += p.speed; if (p.y > H+p.len) Object.assign(p, makeRain(), { y:-p.len });
+      } else if (mode === "snow") {
+        ctx.save(); ctx.fillStyle = `rgba(219,234,254,${p.alpha})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        p.wobble += p.ws; p.x += p.drift + Math.sin(p.wobble)*.5; p.y += p.speed;
+        if (p.y > H+p.r) Object.assign(p, makeSnow(), { y:-p.r });
+      } else if (mode === "cloud") {
+        ctx.save(); ctx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+        p.puffs.forEach(pf => { ctx.beginPath(); ctx.ellipse(p.x+pf.dx, p.y+pf.dy, pf.r, pf.r*.65, 0, 0, Math.PI*2); ctx.fill(); });
+        ctx.restore();
+        p.x += p.speed;
+        if (p.speed > 0 && p.x > W+220) Object.assign(p, makeCloud());
+        if (p.speed < 0 && p.x < -220)  Object.assign(p, makeCloud());
+      } else if (mode === "fog") {
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.w);
+        g.addColorStop(0, `rgba(185,200,215,${p.alpha})`); g.addColorStop(1, `rgba(185,200,215,0)`);
+        ctx.save(); ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(p.x, p.y, p.w, p.h, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        p.x += p.speed; if (p.x > W+p.w) p.x = -p.w; if (p.x < -p.w) p.x = W+p.w;
+      } else if (mode === "storm") {
+        ctx.save(); ctx.strokeStyle = `rgba(147,197,253,${p.alpha})`; ctx.lineWidth = p.w;
+        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + Math.cos(.38)*p.len, p.y + Math.sin(.38+Math.PI/2)*p.len); ctx.stroke(); ctx.restore();
+        p.y += p.speed; p.x += p.speed*.35;
+        if (p.y > H+p.len || p.x > W+40) Object.assign(p, makeStorm(), { y:Math.random()*-80 });
+      } else if (mode === "sun") {
+        ctx.save(); ctx.fillStyle = `rgba(253,211,77,${p.alpha})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+        p.y -= p.speed; p.x += p.drift; if (p.y < -p.r) Object.assign(p, makeSun(), { y:H+10 });
+      } else if (mode === "stars") {
+        p.twinkleOffset += p.twinkleSpeed;
+        const a = p.alpha * (0.5 + 0.5 * Math.sin(p.twinkleOffset));
+        ctx.save(); ctx.fillStyle = `rgba(255,255,240,${a})`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+      } else if (mode === "leaves") {
+        p.wobble += p.ws; p.rot += p.rotSpeed;
+        p.x += p.drift + Math.sin(p.wobble) * 0.8; p.y += p.speed;
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.size, p.size*0.55, 0, 0, Math.PI*2);
+        ctx.fill(); ctx.restore();
+        if (p.y > H + p.size) Object.assign(p, makeLeaf(), { y: -p.size });
+      }
+    });
+  }
+
+  window.setParticleMode = (m) => { if (m === mode) return; initParticles(m); if (!animId) loop(); };
+  loop();
+})();
+
+// ============================================================
+// LOAD WEATHER
+// ============================================================
+async function loadWeather() {
+  document.getElementById("statusText").textContent = "Updating…";
+  try {
+    const [forecastRes, obsRes, hourlyRes] = await Promise.all([
+      fetch(FORECAST_URL,        { headers: HEADERS }),
+      fetch(`https://api.weather.gov/stations/${STATION_ID}/observations?limit=5`, { headers: HEADERS }),
+      fetch(FORECAST_HOURLY_URL, { headers: HEADERS }),
+    ]);
+
+    // Observations
+    let obs = null, obsAgeMins = null;
+    if (obsRes.ok) {
+      const j = await obsRes.json();
+      for (const f of (j.features || [])) {
+        const p = f.properties || {};
+        if (p.temperature?.value != null) { obs = p; break; }
+      }
+      if (!obs && j.features?.length) obs = j.features[0].properties || null;
+    }
+    if (obs?.timestamp) obsAgeMins = Math.round((Date.now() - new Date(obs.timestamp).getTime()) / 60000);
+
+    // Station is considered offline if obs is missing or older than 90 minutes
+    const obsStale = obs == null || (obsAgeMins != null && obsAgeMins > 90);
+
+    // If station is offline, fetch Open-Meteo as fallback
+    let om = null;
+    if (obsStale) {
+      try {
+        const omRes = await fetch(OPEN_METEO_URL);
+        if (omRes.ok) {
+          const omJson = await omRes.json();
+          om = omJson.current || null;
+        }
+      } catch (e) { console.warn("Open-Meteo fallback failed:", e); }
+    }
+
+    // Parse hourly data up front so fallback can use it
+    let hourlyPeriods = [];
+    if (hourlyRes.ok) {
+      const hj = await hourlyRes.json();
+      hourlyPeriods = hj.properties?.periods || [];
+    }
+    const hourlyNow = hourlyPeriods[0] || null;
+
+    // Forecast (required)
+    if (!forecastRes.ok) throw new Error("Forecast unavailable (" + forecastRes.status + ")");
+    const fc = await forecastRes.json();
+    const periods = fc.properties?.periods || [];
+    if (!periods.length) throw new Error("No forecast periods returned.");
+    const cur = periods[0];
+
+    // Location
+    document.getElementById("hNow").textContent = "New Philadelphia, OH";
+    // Greeting
+    const hr = new Date().getHours();
+
+    // Temperature — obs → Open-Meteo → hourly → daily forecast
+    let tempText = "N/A";
+    if (!obsStale && obs?.temperature?.value != null) {
+      const tf = cToF(obs.temperature.value);
+      if (tf != null) tempText = Math.round(tf) + "°F";
+    } else if (om?.temperature_2m != null) {
+      tempText = Math.round(om.temperature_2m) + "°F";
+    } else if (hourlyNow && typeof hourlyNow.temperature === "number") {
+      tempText = hourlyNow.temperature + "°" + (hourlyNow.temperatureUnit || "F");
+    } else if (typeof cur.temperature === "number") {
+      tempText = cur.temperature + "°" + (cur.temperatureUnit || "F");
+    }
+    document.getElementById("tNow").textContent = tempText;
+
+    // Sky condition — obs → Open-Meteo → hourly → daily
+    const omCondText = om ? omCodeToText(om.weather_code, om.is_day) : null;
+    const skyCondition = (!obsStale ? skyText(obs) : null) || omCondText || hourlyNow?.shortForecast || cur.shortForecast || "";
+    document.getElementById("shortNow").textContent  = skyCondition;
+    document.getElementById("detailNow").textContent = cur.detailedForecast || "";
+
+    // Icon & theme — obs → Open-Meteo → hourly → daily
+    const isNightNow = om ? !om.is_day : hourlyNow ? !hourlyNow.isDaytime : (new Date().getHours() >= 20 || new Date().getHours() < 6);
+    const greeting = isNightNow
+      ? "Good night 🌙"
+      : hr < 12 ? "Good morning ☀️"
+      : hr < 17 ? "Good afternoon 🌤️"
+      : "Good evening 🌅";
+    document.getElementById("ccGreeting").textContent = greeting;
+    const iconType = (!obsStale ? iconTypeFromObs(obs, isNightNow) : null)
+      || (om ? resolveIcon(omCondText, isNightNow) : null)
+      || resolveIcon(hourlyNow?.shortForecast || cur.shortForecast, isNightNow);
+    document.getElementById("iconNow").innerHTML = svgIcon(iconType, "big");
+    const themeKey = !obsStale
+      ? (((obs.presentWeather || []).map(p => p.rawString || "").join(" ") + " " + (obs.textDescription || "")).trim() || omCondText || hourlyNow?.shortForecast || cur.shortForecast || "")
+      : (omCondText || hourlyNow?.shortForecast || cur.shortForecast || "");
+    applyTheme(themeKey, isNightNow);
+
+    // Feels like — obs → Open-Meteo
+    let feelsText = "Feels like: —";
+    if (!obsStale && obs) {
+      const fv = obs.heatIndex?.value ?? obs.windChill?.value ?? null;
+      if (fv != null) { const f = cToF(fv); if (f != null) feelsText = "Feels like: " + Math.round(f) + "°F"; }
+    } else if (om?.apparent_temperature != null) {
+      feelsText = "Feels like: " + Math.round(om.apparent_temperature) + "°F";
+    }
+    document.getElementById("mFeels").textContent = feelsText;
+
+    // Humidity — obs → Open-Meteo
+    document.getElementById("mHumidity").textContent =
+      (!obsStale && obs?.relativeHumidity?.value != null)
+        ? "Humidity: " + Math.round(obs.relativeHumidity.value) + "%"
+        : om?.relative_humidity_2m != null
+          ? "Humidity: " + Math.round(om.relative_humidity_2m) + "%"
+          : "Humidity: —";
+
+    // Wind — obs → Open-Meteo → hourly
+    let windText = "Wind: —";
+    if (!obsStale && obs?.windSpeed?.value != null) {
+      const mph = toMPH(obs.windSpeed.value, obs.windSpeed.unitCode || "");
+      const deg = obs.windDirection?.value ?? null;
+      const str = mph != null ? (Math.round(mph) < 1 ? "Calm" : Math.round(mph) + " mph") : null;
+      if (str === "Calm") windText = "Wind: Calm";
+      else if (str) windText = "Wind: " + (deg != null ? dirArrow(deg) + " " + degToDir(deg) + " " : "") + str;
+    } else if (om?.wind_speed_10m != null) {
+      const mph  = Math.round(om.wind_speed_10m);
+      const deg  = om.wind_direction_10m ?? null;
+      windText = mph < 1 ? "Wind: Calm"
+        : "Wind: " + (deg != null ? dirArrow(deg) + " " + degToDir(deg) + " " : "") + mph + " mph";
+    } else if (hourlyNow?.windSpeed) {
+      windText = "Wind: " + (hourlyNow.windDirection ? hourlyNow.windDirection + " " : "") + hourlyNow.windSpeed;
+    }
+    document.getElementById("mWind").textContent = windText;
+
+    // Gusts — obs → Open-Meteo
+    let gustText = "Gusts: —";
+    if (!obsStale && obs?.windGust?.value != null) {
+      const g = toMPH(obs.windGust.value, obs.windGust.unitCode || "");
+      gustText = (g != null && Math.round(g) >= 1) ? "Gusts: " + Math.round(g) + " mph" : "Gusts: None";
+    } else if (om?.wind_gusts_10m != null) {
+      gustText = Math.round(om.wind_gusts_10m) >= 1
+        ? "Gusts: " + Math.round(om.wind_gusts_10m) + " mph"
+        : "Gusts: None";
+    }
+    document.getElementById("mGust").textContent = gustText;
+
+    // Dewpoint — obs → Open-Meteo
+    document.getElementById("mDew").textContent =
+      (!obsStale && obs?.dewpoint?.value != null)
+        ? "Dewpoint: " + Math.round(cToF(obs.dewpoint.value)) + "°F"
+        : om?.dew_point_2m != null
+          ? "Dewpoint: " + Math.round(om.dew_point_2m) + "°F"
+          : "Dewpoint: —";
+
+    // Barometer — obs → Open-Meteo (surface pressure hPa → inHg)
+    document.getElementById("mBaro").textContent =
+      (!obsStale && obs?.barometricPressure?.value != null)
+        ? "Barometer: " + paToInHg(obs.barometricPressure.value).toFixed(2) + " in"
+        : om?.surface_pressure != null
+          ? "Barometer: " + (om.surface_pressure * 0.02953).toFixed(2) + " in"
+          : "Barometer: —";
+
+    // Visibility — obs → Open-Meteo (meters → miles)
+    document.getElementById("mVis").textContent =
+      (!obsStale && obs?.visibility?.value != null)
+        ? "Visibility: " + metersToMiles(obs.visibility.value).toFixed(1) + " mi"
+        : om?.visibility != null
+          ? "Visibility: " + metersToMiles(om.visibility).toFixed(1) + " mi"
+          : "Visibility: —";
+
+    // Times chip
+    const timesEl = document.getElementById("mTimes");
+    const now = new Date();
+    if (obsStale) {
+      const source = om ? "📡 KPHD offline — backup data from Open-Meteo" : "📡 KPHD offline — showing forecast data";
+      timesEl.innerHTML = `Updated: ${formatTime(now)}&nbsp;&nbsp;<span class="stale-warn">${source}</span>`;
+    } else {
+      let t = "Updated: " + formatTime(now);
+      if (obs?.timestamp) {
+        const obsTime = new Date(obs.timestamp);
+        t += "\nObservation: " + formatTime(obsTime);
+        if (obsAgeMins != null)
+          t += obsAgeMins < 60 ? ` (${obsAgeMins}m ago)` : ` (${Math.floor(obsAgeMins/60)}h ${obsAgeMins%60}m ago)`;
+      }
+      timesEl.textContent = t;
+    }
+
+    // Sun & UV — from Open-Meteo (live current UV + daily max + sunrise/sunset)
+    {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      let sunrise = null, sunset = null, uvNow = null, uvMax = null;
+      try {
+        const omRes2  = await fetch(OPEN_METEO_URL);
+        const omData2 = await omRes2.json();
+        const daily   = omData2.daily;
+        const idx     = (daily?.time || []).indexOf(todayStr);
+        if (idx !== -1) {
+          sunrise = daily.sunrise?.[idx] ? new Date(daily.sunrise[idx]) : null;
+          sunset  = daily.sunset?.[idx]  ? new Date(daily.sunset[idx])  : null;
+          uvMax   = daily.uv_index_max?.[idx] ?? null;
+        }
+        uvNow = omData2.current?.uv_index ?? null;
+      } catch (e) { console.warn("Sun/UV fetch error:", e); }
+
+      document.getElementById("sSunriseVal").textContent =
+        sunrise ? formatTime(sunrise) : "—";
+      document.getElementById("sSunsetVal").textContent =
+        sunset  ? formatTime(sunset)  : "—";
+
+      function uvLabel(v) {
+        if (v == null) return "—";
+        if (v <= 2)  return "Low";
+        if (v <= 5)  return "Moderate";
+        if (v <= 7)  return "High";
+        if (v <= 10) return "Very High";
+        return "Extreme";
+      }
+
+      // Show live UV as primary; bar reflects live value; daily max shown as context
+      const uvDisplay = uvNow ?? uvMax;
+      const uvBarVal  = uvNow ?? uvMax;
+      const uvNumEl   = document.getElementById("sUVNum");
+      const uvBarEl   = document.getElementById("sUVBar");
+
+      let labelText = "UV Index  " + uvLabel(uvDisplay);
+      let numText   = uvDisplay != null ? uvDisplay.toFixed(1) : "—";
+      if (uvNow != null && uvMax != null) numText += "  (max " + uvMax.toFixed(1) + ")";
+      else if (uvNow == null && uvMax != null) labelText += "  (day max)";
+
+      document.getElementById("sUVLabel").textContent = labelText;
+      uvNumEl.textContent = numText;
+      uvBarEl.style.width = uvBarVal != null ? Math.min(100, (uvBarVal / 11) * 100).toFixed(1) + "%" : "0%";
+    }
+
+    // 7-Day forecast cards
+    const box  = document.getElementById("forecastBox");
+    box.innerHTML = "";
+    const maxP = Math.min(periods.length, 14);
+    for (let i = 0; i < maxP; i++) {
+      const p    = periods[i];
+      const tStr = typeof p.temperature === "number" ? p.temperature + "°" + (p.temperatureUnit || "F") : "N/A";
+      const card = document.createElement("div");
+      card.className = "fc-card" + (p.isDaytime === false ? " fc-night" : "");
+      card.setAttribute("tabindex", "0");
+      card.innerHTML =
+        `<div class="fc-name">${p.name}</div>` +
+        `<div class="fc-icon">${svgIcon(resolveIcon(p.shortForecast, p.isDaytime === false), "med")}</div>` +
+        `<div class="fc-temp">${tStr}</div>` +
+        `<div class="fc-short">${p.shortForecast || ""}</div>` +
+        (p.detailedForecast ? `<div class="fc-tooltip">${p.detailedForecast}</div>` : "");
+
+      // Position tooltip via JS so it escapes all overflow/stacking contexts
+      const tooltip = card.querySelector(".fc-tooltip");
+      if (tooltip) {
+        card.removeChild(tooltip);
+        document.body.appendChild(tooltip);
+        const show = () => {
+          const r = card.getBoundingClientRect();
+          tooltip.style.top  = (r.bottom + 10) + "px";
+          const left = Math.min(r.left, window.innerWidth - 240);
+          tooltip.style.left = Math.max(8, left) + "px";
+          tooltip.classList.add("visible");
+        };
+        const hide = () => tooltip.classList.remove("visible");
+        card.addEventListener("mouseenter", show);
+        card.addEventListener("mouseleave", hide);
+        card.addEventListener("focus", show);
+        card.addEventListener("blur", hide);
+      }
+
+      box.appendChild(card);
+    }
+
+    // Weekly outlook summary
+    const outlookEl = document.getElementById("weeklyOutlook");
+    if (outlookEl && periods.length >= 2) {
+      const dayPeriods = periods.filter(p => p.isDaytime !== false).slice(0, 7);
+
+      // Categorize each day
+      const cats = dayPeriods.map(p => {
+        const f = (p.shortForecast || "").toLowerCase();
+        const t = p.temperature;
+        if (f.includes("thunder") || f.includes("storm"))  return { type:"storm",  t };
+        if (f.includes("snow") || f.includes("blizzard"))  return { type:"snow",   t };
+        if (f.includes("rain") || f.includes("shower") || f.includes("drizzle")) return { type:"rain", t };
+        if (f.includes("fog")  || f.includes("mist"))      return { type:"fog",    t };
+        if (f.includes("cloud") || f.includes("overcast")) return { type:"cloudy", t };
+        return { type:"clear", t };
+      });
+
+      const temps  = cats.map(c => c.t).filter(Boolean);
+      const avgT   = temps.length ? Math.round(temps.reduce((a,b)=>a+b,0)/temps.length) : null;
+      const highT  = temps.length ? Math.max(...temps) : null;
+      const lowT   = temps.length ? Math.min(...temps) : null;
+      const types  = cats.map(c => c.type);
+      const names  = dayPeriods.map(p => p.name?.replace(/\s+Night$/i,"").trim());
+
+      // Count weather types
+      const stormDays  = types.filter(t => t==="storm").length;
+      const rainDays   = types.filter(t => t==="rain").length;
+      const snowDays   = types.filter(t => t==="snow").length;
+      const clearDays  = types.filter(t => t==="clear").length;
+      const cloudyDays = types.filter(t => t==="cloudy").length;
+
+      // Find first/last rain or storm day name
+      const firstWetIdx = types.findIndex(t => t==="rain"||t==="storm");
+      const lastWetIdx  = types.map((t,i)=>(t==="rain"||t==="storm")?i:-1).filter(i=>i>=0).pop() ?? -1;
+      const firstWetDay = firstWetIdx >= 0 ? names[firstWetIdx] : null;
+      const lastWetDay  = lastWetIdx  >= 0 ? names[lastWetIdx]  : null;
+
+      // Build sentence parts
+      const parts = [];
+
+      // Opening — overall character of the week
+      const wetDays = rainDays + stormDays;
+      if (snowDays >= 3)       parts.push("A snowy week ahead");
+      else if (stormDays >= 2) parts.push("A stormy stretch ahead");
+      else if (wetDays >= 4)   parts.push("A mostly wet week ahead");
+      else if (wetDays >= 2)   parts.push("A mix of sun and rain this week");
+      else if (clearDays >= 5) parts.push("A mostly sunny week ahead");
+      else if (cloudyDays >= 4)parts.push("A mostly cloudy week ahead");
+      else                     parts.push("A variable week ahead");
+
+      // Precipitation timing
+      if (firstWetDay && firstWetDay === names[0]) {
+        if (lastWetDay && lastWetDay !== names[0]) parts.push(`with wet conditions persisting through ${lastWetDay}`);
+        else parts.push("starting with wet weather today");
+      } else if (firstWetDay) {
+        parts.push(`with ${stormDays > 0 ? "storms" : "rain"} arriving ${firstWetDay}`);
+        if (lastWetDay && lastWetDay !== firstWetDay) parts.push(`through ${lastWetDay}`);
+      }
+
+      // Snow note
+      if (snowDays > 0 && snowDays < 3) {
+        const snowIdx = types.findIndex(t=>t==="snow");
+        parts.push(`snow possible ${names[snowIdx]}`);
+      }
+
+      // Temperature note
+      if (avgT !== null) {
+        // Monthly normal highs for Tuscarawas County (NWS historical averages)
+        const MONTHLY_NORMS = [35,38,48,60,70,79,83,81,74,62,50,38];
+        const norm = MONTHLY_NORMS[new Date().getMonth()];
+        const diff = avgT - norm;
+        if (highT - lowT >= 20) parts.push(`with a wide temperature swing from ${lowT}° to ${highT}°`);
+        else if (diff >= 8)  parts.push(`temperatures running above normal near ${highT}°`);
+        else if (diff <= -8) parts.push(`temperatures running below normal near ${lowT}°`);
+        else                 parts.push(`temperatures near seasonal norms`);
+      }
+
+      outlookEl.textContent = parts.join(", ") + ".";
+    }
+    const strip = document.getElementById("hourlyStrip");
+    strip.innerHTML = "";
+    if (hourlyPeriods.length) {
+      hourlyPeriods.slice(0, 24).forEach((h, i) => {
+        const tStr = typeof h.temperature === "number" ? h.temperature + "°" + (h.temperatureUnit || "F") : "N/A";
+        const pop  = h.probabilityOfPrecipitation?.value ?? null;
+        const popClass = pop == null || pop === 0 ? "" : pop < 30 ? "pop-low" : pop < 70 ? "pop-med" : "pop-high";
+        const popHtml  = pop != null && pop > 0
+          ? `<div class="cc-hour-pop ${popClass}">💧${Math.round(pop)}%</div>`
+          : `<div class="cc-hour-pop"></div>`;
+        const card = document.createElement("div");
+        card.className = "cc-hour" + (i === 0 ? " now" : "");
+        card.title = h.shortForecast || "";
+        card.innerHTML =
+          `<div class="cc-hour-time">${i === 0 ? "Now" : formatTime(new Date(h.startTime))}</div>` +
+          `<div class="cc-hour-icon">${svgIcon(resolveIcon(h.shortForecast, h.isDaytime === false), "small")}</div>` +
+          `<div class="cc-hour-temp">${tStr}</div>` +
+          popHtml;
+        strip.appendChild(card);
+      });
+    }
+
+    // 7-day temperature range bars
+    const rangeEl = document.getElementById("tempRangeBars");
+    rangeEl.innerHTML = "";
+    const dayMap = {};
+    const dayOrder = [];
+    for (const p of periods.slice(0, 14)) {
+      if (typeof p.temperature !== "number") continue;
+      let raw = (p.name || "").trim();
+      let name;
+      if (/^(today|this\s)/i.test(raw))   name = "Today";
+      else if (/^tonight$/i.test(raw))     name = "Tonight";
+      else                                 name = raw.replace(/\s+Night$/i, "").split(" ")[0];
+      if (!dayMap[name]) { dayMap[name] = { name, high: null, low: null }; dayOrder.push(name); }
+      if (p.isDaytime === false) dayMap[name].low  = p.temperature;
+      else                       dayMap[name].high = p.temperature;
+    }
+    // Only show days that have BOTH high and low (skip Today-only or Tonight-only entries)
+    const days = dayOrder.map(k => dayMap[k]).filter(d => d.high != null && d.low != null);
+    // If Today has no low yet (still daytime), add it with just the high shown as a dot
+    const todayEntry = dayMap["Today"];
+    if (todayEntry && todayEntry.high != null && todayEntry.low == null) {
+      days.unshift({ name: "Today", high: todayEntry.high, low: todayEntry.high, todayOnly: true });
+    }
+    if (days.length) {
+      const allTemps = days.flatMap(d => [d.high, d.low]);
+      const tMin = Math.min(...allTemps) - 2;
+      const tMax = Math.max(...allTemps) + 2;
+      const span = tMax - tMin || 1;
+      days.forEach(d => {
+        const loP  = Math.max(0, Math.min(97,  (d.low  - tMin) / span * 100));
+        const hiP  = Math.max(0, Math.min(100, (d.high - tMin) / span * 100));
+        const barW = d.todayOnly ? 2 : Math.max(2, hiP - loP);
+        const row  = document.createElement("div");
+        row.className = "tr-row";
+        row.innerHTML =
+          `<div class="tr-label">${d.name}</div>` +
+          `<div class="tr-low">${d.todayOnly ? "" : d.low + "°"}</div>` +
+          `<div class="tr-track"><div class="tr-bar" style="left:${loP.toFixed(1)}%;width:${barW.toFixed(1)}%"></div></div>` +
+          `<div class="tr-high">${d.high}°</div>`;
+        rangeEl.appendChild(row);
+      });
+    }
+
+    document.getElementById("statusText").textContent = "Live · " + formatTime(new Date());
+    document.getElementById("errNow").textContent = "";
+
+  } catch (err) {
+    console.error("Weather load error:", err);
+    document.getElementById("tNow").textContent  = "—";
+    document.getElementById("errNow").textContent = err.message;
+    document.getElementById("statusText").textContent = "Error";
+  }
+}
+
+// ============================================================
+// LOAD ALERTS
+// ============================================================
+async function loadAlerts() {
+  const bar   = document.getElementById("alertBar");
+  const panel = document.getElementById("alertPanel");
+  bar.style.display = "none";
+  panel.style.display = "none";
+  panel.textContent = "";
+  try {
+    // Fetch both forecast zone (OHZ) and county (OHC) — watches use county codes
+    const [resZone, resCounty] = await Promise.all([
+      fetch(`https://api.weather.gov/alerts/active?zone=${ALERT_ZONE}`,   { headers: HEADERS }),
+      fetch(`https://api.weather.gov/alerts/active?zone=${ALERT_COUNTY}`, { headers: HEADERS }),
+    ]);
+    const zoneAlerts   = resZone.ok   ? (await resZone.json()).features   || [] : [];
+    const countyAlerts = resCounty.ok ? (await resCounty.json()).features || [] : [];
+
+    // Merge and deduplicate by alert ID
+    const seen = new Set();
+    const alerts = [...zoneAlerts, ...countyAlerts]
+      .map(f => f.properties).filter(Boolean)
+      .filter(a => { if (seen.has(a.id)) return false; seen.add(a.id); return true; });
+
+    if (!alerts.length) {
+      document.body.classList.remove("storm-tracker");
+      return;
+    }
+
+    // Only activate storm tracker for genuinely severe/dangerous alerts
+    const SEVERE_EVENTS = [
+      "tornado warning", "tornado emergency",
+      "severe thunderstorm warning",
+      "flash flood emergency", "flash flood warning",
+      "extreme wind warning",
+      "blizzard warning",
+      "ice storm warning",
+      "hurricane warning",
+      "storm surge warning",
+    ];
+    const hasSevere = alerts.some(a => {
+      const evt      = (a.event      || "").toLowerCase();
+      const severity = (a.severity   || "").toLowerCase();
+      const urgency  = (a.urgency    || "").toLowerCase();
+      // Only match explicitly listed events — don't use severity/urgency fallback
+      // as it catches too many routine warnings (flood warnings, wind advisories etc.)
+      return SEVERE_EVENTS.some(s => evt === s || evt.startsWith(s));
+    });
+
+    if (hasSevere) {
+      document.body.classList.add("storm-tracker");
+      if (window.setParticleMode) window.setParticleMode("storm");
+    } else {
+      document.body.classList.remove("storm-tracker");
+    }
+
+    bar.style.display   = "block";
+    // Sort severe alerts to the top
+    const sortedAlerts = [...alerts].sort((a, b) => {
+      const aS = SEVERE_EVENTS.some(s => (a.event||"").toLowerCase().includes(s)) ? 0 : 1;
+      const bS = SEVERE_EVENTS.some(s => (b.event||"").toLowerCase().includes(s)) ? 0 : 1;
+      return aS - bS;
+    });
+    const alertNames = [...new Set(sortedAlerts.map(a => a.event).filter(Boolean))];
+    bar.textContent = "⚠ " + alertNames.join(" · ") + " — Click to expand";
+    panel.textContent = sortedAlerts.map(a =>
+      [a.event, a.headline,
+       a.description  ? "\n" + a.description  : "",
+       a.instruction  ? "\n" + a.instruction  : ""]
+      .filter(Boolean).join("\n") + "\n\n" + "─".repeat(40)
+    ).join("\n\n").trim();
+  } catch (e) {
+    console.warn("Alert fetch error:", e);
+  }
+}
+
+// Alert bar toggle
+const alertBar = document.getElementById("alertBar");
+alertBar.addEventListener("click", () => {
+  const panel = document.getElementById("alertPanel");
+  const open  = panel.style.display === "block";
+  panel.style.display = open ? "none" : "block";
+  alertBar.setAttribute("aria-expanded", String(!open));
+});
+alertBar.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") alertBar.click(); });
+
+// ============================================================
+// LOAD RSS FEED  (JSONP — bypasses Google Sites CSP)
+// ============================================================
+function loadRSS() {
+  const el = document.getElementById("rssFeed");
+  el.innerHTML = `<div class="rss-loading">Loading updates\u2026</div>`;
+
+  const old = document.getElementById("bloggerJsonpScript");
+  if (old) old.remove();
+
+  const timeout = setTimeout(() => {
+    window.__bloggerCb = null;
+    el.innerHTML = `<div class="rss-error">Unable to load updates right now. Visit us on <a href="https://www.facebook.com/XaviersWeatherChannel" target="_blank" rel="noopener" style="color:var(--accent)">Facebook</a> for the latest.</div>`;
+  }, 8000);
+
+  window.__bloggerCb = function(data) {
+    clearTimeout(timeout);
+    window.__bloggerCb = null;
+    const entries = data?.feed?.entry || [];
+
+    if (!entries.length) {
+      el.innerHTML = `<div class="rss-error">No posts yet \u2014 check back soon!</div>`;
+      return;
+    }
+
+    el.innerHTML = "";
+    entries.forEach((entry, i) => {
+      const linkEl  = (entry.link || []).find(l => l.rel === "alternate");
+      const link    = linkEl?.href || "https://xaviersweather.blogspot.com";
+      const title   = entry.title?.$t || "Untitled";
+      const date    = entry.published?.$t ? new Date(entry.published.$t) : null;
+      const dateStr = date
+        ? date.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" })
+        : "";
+      // Use full HTML content, hide images via CSS, sanitize dangerous tags
+      const raw = (entry.content?.$t || entry.summary?.$t || "")
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+        .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, "")
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
+
+      const div = document.createElement("div");
+      div.className = "rss-item";
+      div.innerHTML =
+        (dateStr ? `<div class="rss-date">${dateStr}</div>` : "") +
+        `<div class="rss-title">${title}</div>` +
+        `<div class="rss-body">${raw}</div>` +
+        `<a class="rss-readmore" href="${link}" target="_blank" rel="noopener">\u2197 View on Blogger</a>`;
+
+      el.appendChild(div);
+
+      // Divider between posts
+      if (i < entries.length - 1) {
+        const hr = document.createElement("div");
+        hr.className = "rss-divider";
+        el.appendChild(hr);
+      }
+    });
+  };
+
+  const script = document.createElement("script");
+  script.id    = "bloggerJsonpScript";
+  script.src   = "https://xaviersweather.blogspot.com/feeds/posts/default?alt=json&max-results=10&callback=__bloggerCb";
+  document.head.appendChild(script);
+}
+
+// ============================================================
+// LOAD EXTRA INFO: AQI, Pollen, Precip, Snow, Moon, Historical
+// ============================================================
+async function loadExtras() {
+  // ---- helpers ----
+  function chip(id, label, val, sub, color) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML =
+      `<span class="chip-label">${label}</span>` +
+      `<span class="chip-val"${color ? ` style="color:${color}"` : ""}>${val}</span>` +
+      (sub ? `<span class="chip-sub">${sub}</span>` : "");
+  }
+
+  function aqiLabel(v) {
+    if (v == null) return ["—", null];
+    if (v <= 50)  return ["Good",            "#34d399"];
+    if (v <= 100) return ["Moderate",        "#fbbf24"];
+    if (v <= 150) return ["Unhealthy (Sens.)","#fb923c"];
+    if (v <= 200) return ["Unhealthy",       "#f87171"];
+    if (v <= 300) return ["Very Unhealthy",  "#c084fc"];
+    return             ["Hazardous",         "#f43f5e"];
+  }
+
+  function pollenLevel(v) {
+    if (v == null || v === 0) return "None";
+    if (v < 10)  return "Low";
+    if (v < 50)  return "Moderate";
+    if (v < 200) return "High";
+    return "Very High";
+  }
+
+  function moonPhase() {
+    // Simple moon phase calc (synodic period ~29.53 days)
+    const known = new Date("2000-01-06T18:14:00Z"); // known new moon
+    const now   = new Date();
+    const diff  = (now - known) / (1000 * 60 * 60 * 24);
+    const cycle = 29.53058867;
+    const phase = ((diff % cycle) + cycle) % cycle;
+    const pct   = phase / cycle;
+    if (pct < 0.03 || pct > 0.97) return { name: "New Moon",        icon: "🌑" };
+    if (pct < 0.22)                return { name: "Waxing Crescent", icon: "🌒" };
+    if (pct < 0.28)                return { name: "First Quarter",   icon: "🌓" };
+    if (pct < 0.47)                return { name: "Waxing Gibbous",  icon: "🌔" };
+    if (pct < 0.53)                return { name: "Full Moon",       icon: "🌕" };
+    if (pct < 0.72)                return { name: "Waning Gibbous",  icon: "🌖" };
+    if (pct < 0.78)                return { name: "Last Quarter",    icon: "🌗" };
+    return                                { name: "Waning Crescent", icon: "🌘" };
+  }
+
+  // ---- Moon (no API needed) ----
+  const moon = moonPhase();
+  chip("eMoon", "Moon Phase", moon.icon + " " + moon.name, null, null);
+
+  // ---- AQI + Pollen ----
+  try {
+    const aqiRes  = await fetch(AQI_URL);
+    const aqiData = await aqiRes.json();
+
+    const aqi = aqiData.current?.us_aqi ?? null;
+    const [aqiLbl, aqiColor] = aqiLabel(aqi);
+    chip("eAQI", "Air Quality", aqi != null ? `AQI ${aqi}` : "—", aqiLbl, aqiColor);
+
+    // Pollen — use hourly index 0 (current hour)
+    const h = aqiData.hourly;
+    const i = 0;
+    const grass   = h?.grass_pollen?.[i]   ?? null;
+    const tree    = (h?.alder_pollen?.[i] ?? 0) + (h?.birch_pollen?.[i] ?? 0) + (h?.olive_pollen?.[i] ?? 0);
+    const weed    = (h?.ragweed_pollen?.[i] ?? 0) + (h?.mugwort_pollen?.[i] ?? 0);
+    const maxPollen = Math.max(grass ?? 0, tree, weed);
+    const pollenType = grass >= tree && grass >= weed ? "Grass"
+      : tree >= weed ? "Tree" : "Weed";
+    chip("ePollen", "Pollen", pollenLevel(maxPollen),
+      maxPollen > 0 ? pollenType + " dominant" : "All types low",
+      maxPollen >= 200 ? "#f87171" : maxPollen >= 50 ? "#fbbf24" : maxPollen >= 10 ? "#fb923c" : "#34d399");
+  } catch(e) {
+    chip("eAQI",    "Air Quality", "—", null, null);
+    chip("ePollen", "Pollen",      "—", null, null);
+    console.warn("AQI/Pollen error:", e);
+  }
+
+  // ---- Precip + Snow from Open-Meteo daily ----
+  try {
+    const omRes  = await fetch(OPEN_METEO_URL);
+    const omData = await omRes.json();
+    const daily  = omData.daily;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const idx = (daily?.time || []).indexOf(todayStr);
+
+    const precip = idx !== -1 ? (daily.precipitation_sum?.[idx] ?? null) : null;
+    const snow   = idx !== -1 ? (daily.snowfall_sum?.[idx]      ?? null) : null;
+    const hrs    = idx !== -1 ? (daily.precipitation_hours?.[idx] ?? null) : null;
+
+    chip("ePrecip", "Precip Today",
+      precip != null ? precip.toFixed(2) + '"' : "—",
+      hrs != null && hrs > 0 ? `${hrs}h of rain` : "Dry today", null);
+
+    chip("eSnow", "Snowfall Today",
+      snow != null && snow > 0 ? snow.toFixed(1) + '"' : "None",
+      snow > 0 ? "Today's total" : "No snow today", snow > 0 ? "#93c5fd" : null);
+  } catch(e) {
+    chip("ePrecip", "Precip Today", "—", null, null);
+    chip("eSnow",   "Snowfall",     "—", null, null);
+    console.warn("Precip/Snow error:", e);
+  }
+
+  // ---- Historical comparison ----
+  try {
+    const now    = new Date();
+    const mm     = String(now.getMonth() + 1).padStart(2, "0");
+    const dd     = String(now.getDate()).padStart(2, "0");
+    // Fetch 30-year average for today's date (1991-2020)
+    const url = `https://climate-api.open-meteo.com/v1/climate?latitude=40.4756&longitude=-81.4467` +
+      `&start_date=1991-${mm}-${dd}&end_date=2020-${mm}-${dd}` +
+      `&models=EC_Earth3P_HR&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit`;
+    const cRes  = await fetch(url);
+    const cData = await cRes.json();
+    const maxArr = cData.daily?.temperature_2m_max || [];
+    const minArr = cData.daily?.temperature_2m_min || [];
+    if (maxArr.length) {
+      const avgHigh = maxArr.reduce((a, b) => a + b, 0) / maxArr.length;
+      const avgLow  = minArr.reduce((a, b) => a + b, 0) / minArr.length;
+      const avgMid  = (avgHigh + avgLow) / 2;
+      // Get today's current temp from the page
+      const tempEl = document.getElementById("tNow");
+      const tempStr = tempEl?.textContent?.replace(/[^0-9.-]/g, "");
+      const tempNow = parseFloat(tempStr);
+      if (!isNaN(tempNow)) {
+        const diff = Math.round(tempNow - avgMid);
+        const sign = diff > 0 ? "+" : "";
+        const color = diff > 5 ? "#f87171" : diff < -5 ? "#93c5fd" : "#a3e635";
+        chip("eHist", "vs. Normal",
+          `${sign}${diff}°F`,
+          `Avg: ${Math.round(avgMid)}°F for today`, color);
+      } else {
+        chip("eHist", "vs. Normal", "—", null, null);
+      }
+    }
+  } catch(e) {
+    chip("eHist", "vs. Normal", "—", null, null);
+    console.warn("Historical error:", e);
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadWeather();
+loadAlerts();
+loadRSS();
+loadExtras();
+loadFunFact();
+document.getElementById("footerYear").textContent = new Date().getFullYear();
+setInterval(loadWeather, 600_000);
+setInterval(loadAlerts,  900_000);
+setInterval(loadRSS,    1800_000);
+setInterval(loadExtras, 1800_000);
+
+</script>
+
+<!-- Fun Fact / Joke — separate non-module script -->
+<script>
+// ============================================================
+// FUN FACT / JOKE OF THE DAY  (local rotating list)
+// ============================================================
+const FUN_FACTS = [
+  { label: "Ohio Weather Fact",       icon: "🌩️", text: "Ohio experiences more than 50 tornadoes per year on average, making it one of the most tornado-prone states east of the Mississippi." },
+  { label: "Did You Know?",           icon: "🧠",  text: "Tuscarawas County sits in a valley that can trap cold air overnight, often making it 5–10°F colder than surrounding hilltop communities." },
+  { label: "Weather Joke",            icon: "😄",  text: "Why did the weather forecaster bring a ladder to work? Because the forecast called for high pressure!" },
+  { label: "Ohio Weather Record",     icon: "🏔️",  text: "Ohio's all-time record high is 113°F, set in Gallipolis on July 21, 1934 — during the devastating Dust Bowl heat wave." },
+  { label: "Ohio Weather Record",     icon: "❄️",  text: "Ohio's coldest recorded temperature is -39°F, set in Milligan on February 10, 1899 — one of the most brutal cold snaps in state history." },
+  { label: "Forecast Tip",            icon: "💡",  text: "Red sky at night, sailor's delight — red sky in the morning, sailor's warning. This old saying actually has meteorological truth: red skies indicate dust and moisture moving in or out." },
+  { label: "Did You Know?",           icon: "🧠",  text: "Lake Erie's shallow depth makes it the fastest of the Great Lakes to freeze in winter — and also the quickest to produce intense lake-effect snowstorms for northeast Ohio." },
+  { label: "Weather Joke",            icon: "😄",  text: "What do you call it when it rains chickens and ducks? Fowl weather!" },
+  { label: "Ohio Weather Fact",       icon: "🌪️",  text: "The Palm Sunday Tornado Outbreak of April 11, 1965 sent 47 tornadoes through Indiana and Ohio in a single afternoon, one of the largest outbreaks in Midwest history." },
+  { label: "Forecast Tip",            icon: "💡",  text: "In Ohio, if you see anvil-shaped thunderstorm tops flattening out to the east, that storm is likely strengthening — time to head indoors." },
+  { label: "Did You Know?",           icon: "🧠",  text: "Snow can actually insulate the ground beneath it — soil under a foot of snow stays much warmer than exposed soil during an Arctic blast." },
+  { label: "Weather Joke",            icon: "😄",  text: "I asked the cloud if it wanted to hang out. It said, 'Sorry, I'm feeling a little under the weather.'" },
+  { label: "Ohio Weather Fact",       icon: "🌧️",  text: "Tuscarawas County averages about 38 inches of rain per year — slightly above the national average — thanks to its position in the mid-Ohio valley moisture corridor." },
+  { label: "Did You Know?",           icon: "🧠",  text: "Lightning strikes the Earth about 100 times every second. During a typical Ohio summer thunderstorm, a single storm cell can generate thousands of strikes per hour." },
+  { label: "Forecast Tip",            icon: "💡",  text: "When you see towering cumulus clouds building rapidly in the afternoon, give them about an hour — that's roughly how long it takes for a summer thunderstorm to mature in Ohio." },
+  { label: "Ohio Weather Record",     icon: "🌨️",  text: "Ohio's greatest single-storm snowfall record is 68 inches — set in the lake-effect snow belt near Chardon during a multi-day event in November 1996." },
+  { label: "Weather Joke",            icon: "😄",  text: "Why do meteorologists make great musicians? Because they're always hitting the lows!" },
+  { label: "Did You Know?",           icon: "🧠",  text: "A single thunderstorm can drop more than 125 million gallons of water. That's enough to fill about 190 Olympic swimming pools." },
+  { label: "Ohio Weather Fact",       icon: "🌤️",  text: "Ohio averages about 178 sunny days per year — less than the national average of 205, largely due to persistent cloud cover from Great Lakes moisture in fall and winter." },
+  { label: "Forecast Tip",            icon: "💡",  text: "Dew point is a better measure of humidity comfort than relative humidity. When the dew point climbs above 65°F in Ohio, most people start feeling uncomfortably sticky." },
+  { label: "Did You Know?",           icon: "🧠",  text: "Snow is not white — it's actually transparent. It appears white because the countless tiny ice crystal facets scatter all wavelengths of visible light equally." },
+  { label: "Weather Joke",            icon: "😄",  text: "What's a tornado's favorite game? Twister — obviously." },
+  { label: "Ohio Weather Fact",       icon: "⛈️",  text: "Dover, Ohio sits within one of the highest lightning strike density zones in the state. The rolling hills and valley terrain funnel summer thunderstorms directly through Tuscarawas County." },
+  { label: "Did You Know?",           icon: "🧠",  text: "Wind chill has no effect on inanimate objects like pipes or car engines — it only affects how quickly heat is drawn away from warm-blooded creatures like people and pets." },
+  { label: "Forecast Tip",            icon: "💡",  text: "If thunder follows lightning by 5 seconds, the strike was about 1 mile away. The 30-30 rule: seek shelter if lightning is within 6 miles (30 seconds), and wait 30 minutes after the last strike." },
+  { label: "Ohio Weather Record",     icon: "🌊",  text: "The Great Flood of 1913 remains the deadliest natural disaster in Ohio history — over 400 people lost their lives as rivers across the state crested far beyond flood stage." },
+  { label: "Weather Joke",            icon: "😄",  text: "I tried to catch some fog earlier. I mist." },
+  { label: "Did You Know?",           icon: "🧠",  text: "Freezing rain occurs when raindrops fall through a shallow layer of freezing air near the surface and instantly glaze everything in ice — one of winter's most dangerous and deceptive weather events." },
+  { label: "Ohio Weather Fact",       icon: "🍂",  text: "Ohio's fall foliage peak in Tuscarawas County typically lands in mid-October, when overnight temperatures consistently drop below 50°F and trigger the trees' color change." },
+  { label: "Forecast Tip",            icon: "💡",  text: "A rapidly falling barometer — dropping more than 0.06 inches of mercury per hour — almost always means significant stormy weather is approaching within 12–24 hours." },
+  { label: "Did You Know?",           icon: "🧠",  text: "The National Weather Service office in Pittsburgh (PBZ) handles forecasts for Tuscarawas County, covering a territory that spans parts of Ohio, Pennsylvania, and West Virginia." },
+  { label: "Weather Joke",            icon: "😄",  text: "Why can't meteorologists look out the window in the morning? Because then they'd have nothing to do in the afternoon." },
+];
+
+let _ffIndex = -1;
+
+function loadFunFact(forceNew) {
+  const textEl  = document.getElementById("funfactText");
+  const labelEl = document.getElementById("funfactLabel");
+  const iconEl  = document.getElementById("funfactIcon");
+  const btn     = document.getElementById("funfactBtn");
+  if (!textEl) return;
+
+  if (_ffIndex < 0) {
+    // Seed with day-of-year so it naturally changes each day
+    const now = new Date();
+    const doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    _ffIndex = doy % FUN_FACTS.length;
+  } else if (forceNew) {
+    _ffIndex = (_ffIndex + 1) % FUN_FACTS.length;
+  }
+
+  const ff = FUN_FACTS[_ffIndex];
+  labelEl.textContent = ff.label;
+  iconEl.textContent  = ff.icon;
+  textEl.textContent  = ff.text;
+  textEl.classList.remove("loading");
+
+  // Spin the button briefly for feedback
+  if (forceNew && btn) {
+    btn.classList.add("spinning");
+    setTimeout(() => btn.classList.remove("spinning"), 600);
+  }
+}
+
+document.getElementById("funfactBtn")?.addEventListener("click", () => loadFunFact(true));
+
+// ============================================================
+// ON THIS DAY — Historical weather facts for Tuscarawas County
+// ============================================================
+const ON_THIS_DAY = [
+  // Jan
+  { m:1,  d:1,  text:"January 1, 1978 — A historic blizzard struck Ohio, burying Tuscarawas County under 2+ feet of snow with winds gusting over 50 mph, paralyzing the region for days." },
+  { m:1,  d:19, text:"January 19, 1994 — Temperatures plunged to -22°F in parts of Tuscarawas County during one of the coldest outbreaks of the 20th century in the Ohio Valley." },
+  { m:1,  d:26, text:"January 26, 1978 — The Great Blizzard of '78 peaked across eastern Ohio, with New Philadelphia recording near-zero visibility for over 36 hours." },
+  // Feb
+  { m:2,  d:14, text:"February 14, 2007 — A major ice storm coated Tuscarawas County in over an inch of ice, snapping power lines and closing roads for several days." },
+  { m:2,  d:22, text:"February 22, 1900 — A rare February tornado touched down in eastern Ohio, a reminder that severe weather can strike even in the depths of winter." },
+  // Mar
+  { m:3,  d:10, text:"March 10, 1948 — A severe late-season blizzard swept through the Ohio Valley, dropping 14 inches of snow on Tuscarawas County and canceling schools for a week." },
+  { m:3,  d:27, text:"March 27, 1913 — The Great Flood of 1913 began affecting Ohio rivers. Though Tuscarawas County was spared the worst, communities along the Tuscarawas River saw historic rises." },
+  // Apr
+  { m:4,  d:3,  text:"April 3, 1974 — The Super Outbreak of tornadoes devastated parts of Ohio. While Tuscarawas County avoided direct strikes, over 30 tornadoes touched down across the state that day." },
+  { m:4,  d:11, text:"April 11, 1965 — The Palm Sunday Tornado Outbreak produced 47 tornadoes across the Midwest. Several touched down in neighboring Ohio counties." },
+  { m:4,  d:28, text:"April 28, 2002 — Severe thunderstorms with baseball-sized hail pounded Tuscarawas County, causing significant crop and property damage across the region." },
+  // May
+  { m:5,  d:14, text:"May 14, 1995 — A strong derecho swept through eastern Ohio, with straight-line winds exceeding 70 mph downing thousands of trees across Tuscarawas County." },
+  { m:5,  d:25, text:"May 25, 1917 — An F3 tornado tracked through Tuscarawas County, one of the most significant tornadoes on record for this part of Ohio." },
+  // Jun
+  { m:6,  d:5,  text:"June 5, 1998 — A powerful severe thunderstorm outbreak produced multiple tornadoes across eastern Ohio, with warnings issued for Tuscarawas County." },
+  { m:6,  d:29, text:"June 29, 2012 — A massive derecho swept from Indiana to the Mid-Atlantic, producing 80 mph winds across Tuscarawas County and leaving thousands without power." },
+  // Jul
+  { m:7,  d:4,  text:"July 4, 1936 — The peak of a brutal heat wave saw temperatures climb to 104°F in parts of eastern Ohio during one of the hottest summers on record." },
+  { m:7,  d:21, text:"July 21, 1992 — Severe thunderstorms dumped over 4 inches of rain in 2 hours on Tuscarawas County, causing flash flooding in New Philadelphia and Dover." },
+  // Aug
+  { m:8,  d:1,  text:"August 1, 1925 — Eastern Ohio recorded its highest ever August temperature during a prolonged heat wave that stretched across the entire Ohio Valley." },
+  { m:8,  d:14, text:"August 14, 2003 — The Northeast Blackout began, though unrelated to weather, it underscored how heat waves strain the power grid — temperatures that day hit 92°F in Tuscarawas County." },
+  // Sep
+  { m:9,  d:16, text:"September 16, 2004 — Remnants of Hurricane Ivan brought heavy rainfall to Tuscarawas County, dropping over 3 inches of rain and causing minor flooding along the river." },
+  { m:9,  d:14, text:"September 14, 2008 — Remnants of Hurricane Ike swept through Ohio with sustained winds of 50–70 mph, causing widespread tree damage and outages across Tuscarawas County." },
+  // Oct
+  { m:10, d:10, text:"October 10, 1906 — An early-season snowstorm dropped 8 inches of wet snow on Tuscarawas County while many trees still had their leaves, causing extensive branch breakage." },
+  { m:10, d:24, text:"October 24, 1952 — An early severe cold outbreak sent temperatures into the single digits across eastern Ohio, setting records that still stand in some locations." },
+  // Nov
+  { m:11, d:11, text:"November 11, 1940 — The Armistice Day Blizzard struck the Midwest. While Ohio was spared the worst, Tuscarawas County saw temperatures drop 40°F in a single day." },
+  { m:11, d:23, text:"November 23, 1950 — The Appalachian Storm of 1950 produced blizzard conditions across eastern Ohio. New Philadelphia recorded its heaviest November snowfall to date." },
+  // Dec
+  { m:12, d:4,  text:"December 4, 2013 — An ice storm coated Tuscarawas County in three-quarters of an inch of ice, making roads impassable and knocking out power to thousands." },
+  { m:12, d:23, text:"December 23, 2022 — A historic bomb cyclone brought -10°F temperatures and 40 mph winds to Tuscarawas County, resulting in wind chills approaching -40°F on Christmas Eve." },
+];
+
+function loadOnThisDay() {
+  const now   = new Date();
+  const m     = now.getMonth() + 1;
+  const d     = now.getDate();
+  // Find exact match first, then closest
+  let fact = ON_THIS_DAY.find(f => f.m === m && f.d === d);
+  if (!fact) {
+    // Find nearest by day-of-year distance
+    const doy = n => n.m * 31 + n.d;
+    const today = m * 31 + d;
+    fact = ON_THIS_DAY.reduce((best, f) => {
+      const dist = Math.abs(doy(f) - today);
+      return dist < Math.abs(doy(best) - today) ? f : best;
+    });
+  }
+  const el = document.getElementById("otdText");
+  if (el && fact) el.textContent = fact.text;
+}
+loadOnThisDay();
+
+// ============================================================
+// STORM SAFETY TIPS
+// ============================================================
+const STORM_SAFETY_TIPS = [
+  "🌪️ Tornado Warning: Go immediately to the lowest floor, an interior room away from windows. A bathroom, closet, or under a staircase are ideal. Cover your head.",
+  "⛈️ Severe Thunderstorm: Stay indoors and away from windows. Unplug electronics. Avoid bathing or using corded phones — lightning can travel through plumbing and wiring.",
+  "🌊 Flash Flood Warning: Never attempt to drive through flooded roads. Just 6 inches of water can knock a person down; 12 inches can sweep away a small vehicle. Turn around, don't drown.",
+  "📻 Stay informed: Keep a battery-powered NOAA Weather Radio on hand during severe weather so you receive alerts even if power goes out or your phone loses signal.",
+  "🏠 After the storm: Watch for downed power lines — treat every downed line as live and dangerous. Report them to your utility company and keep others away.",
+  "📱 Sign up for Tuscarawas County emergency alerts at the county EMA website to receive official evacuation and shelter-in-place notifications directly to your phone.",
+  "🌩️ Lightning safety: If caught outside, avoid tall trees, open fields, and hilltops. Seek a low-lying area and crouch low — don't lie flat. Get inside a sturdy building or hard-topped vehicle.",
+  "🧰 Emergency kit: Keep a go-bag ready with water (1 gallon/person/day), non-perishable food, medications, flashlight, batteries, first aid kit, and copies of important documents.",
+];
+
+let _stormTipIndex = 0;
+function showStormTip(next = false) {
+  if (next) _stormTipIndex = (_stormTipIndex + 1) % STORM_SAFETY_TIPS.length;
+  const el = document.getElementById("stormSafetyText");
+  if (el) el.textContent = STORM_SAFETY_TIPS[_stormTipIndex];
+}
+showStormTip();
+document.getElementById("stormSafetyBtn")?.addEventListener("click", () => {
+  showStormTip(true);
+  const btn = document.getElementById("stormSafetyBtn");
+  btn?.classList.add("spinning");
+  setTimeout(() => btn?.classList.remove("spinning"), 600);
+});
+
+// Show/hide storm safety panel based on storm-tracker class
+const _stormObserver = new MutationObserver(() => {
+  const active = document.body.classList.contains("storm-tracker");
+  const panel  = document.getElementById("stormSafetyPanel");
+  if (panel) panel.style.display = active ? "block" : "none";
+});
+_stormObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+// Also check initial state in case page loads mid-storm
+(function() {
+  const active = document.body.classList.contains("storm-tracker");
+  const panel  = document.getElementById("stormSafetyPanel");
+  if (panel && active) panel.style.display = "block";
+})();
+</script>
+</body>
+</html>
