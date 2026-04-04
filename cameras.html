@@ -109,6 +109,13 @@ body::after {
 }
 .topbar-nav a:hover { background: rgba(255,255,255,0.12); color: var(--text-1); }
 .topbar-nav a.active { background: rgba(255,255,255,0.12); color: var(--text-1); }
+@media (max-width: 600px) {
+  .topbar { padding: 0 16px; height: 52px; }
+  .topbar-brand span { display: none; }
+  .topbar-brand h1 { font-size: 0.95rem; }
+  .topbar-nav a { padding: 4px 10px; font-size: 0.68rem; }
+  .nav-label { display: none; }
+}
 
 /* Page */
 .page-body {
@@ -400,8 +407,8 @@ body::after {
     <span>Honest Weather for Tuscarawas County</span>
   </div>
   <nav class="topbar-nav">
-    <a href="/">← Weather</a>
-    <a href="/cameras.html" class="active">📷 County Cameras</a>
+    <a href="/">← <span class="nav-label">Weather</span></a>
+    <a href="/cameras.html" class="active">📷 <span class="nav-label">County Cameras</span></a>
   </nav>
 </header>
 

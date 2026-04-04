@@ -228,6 +228,13 @@ body::after {
   color: var(--text-3);
   font-weight: 400;
 }
+@media (max-width: 600px) {
+  .topbar { padding: 0 16px; height: 52px; }
+  .topbar-brand span { display: none; }
+  .topbar-brand h1 { font-size: 0.95rem; }
+  .topbar-cameras-btn { padding: 4px 10px; font-size: 0.68rem; }
+  .cam-btn-label { display: none; }
+}
 
 .topbar-status {
   display: flex;
@@ -972,7 +979,7 @@ iframe {
       <span>Honest Weather for Tuscarawas County</span>
     </div>
     <div class="topbar-status">
-      <a href="/cameras.html" class="topbar-cameras-btn">📷 County Cameras</a>
+      <a href="/cameras.html" class="topbar-cameras-btn">📷 <span class="cam-btn-label">County Cameras</span></a>
       <div class="status-dot"></div>
       <span id="statusText">Loading…</span>
     </div>
