@@ -203,6 +203,9 @@ body::after {
   .cam-grid.layout-2x2,
   .cam-grid.layout-1x4 { grid-template-columns: 1fr; }
   .btn-layout { display: none; }
+  .cam-grid { gap: 10px; padding: 12px 14px 16px; }
+  .section-head { padding: 14px 16px 10px; }
+  .page-body { padding: 12px 14px 30px; }
 }
 
 /* Camera tile */
@@ -232,14 +235,14 @@ body::after {
 /* Chips */
 .cam-chip {
   position: absolute;
-  left: 10px; bottom: 10px;
-  background: rgba(0,0,0,0.65);
+  left: 8px; bottom: 8px;
+  background: rgba(0,0,0,0.72);
   backdrop-filter: blur(8px);
   color: #fff;
-  padding: 5px 10px;
-  font-size: 0.75rem;
+  padding: 4px 9px;
+  font-size: 0.72rem;
   border-radius: 999px;
-  max-width: calc(100% - 100px);
+  max-width: calc(100% - 90px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -249,38 +252,30 @@ body::after {
 }
 .cam-chip-tr {
   position: absolute;
-  right: 10px; top: 10px;
-  background: rgba(0,0,0,0.65);
+  right: 8px; top: 8px;
+  background: rgba(0,0,0,0.72);
   backdrop-filter: blur(8px);
   color: #fff;
-  padding: 5px 10px;
-  font-size: 0.72rem;
+  padding: 4px 9px;
+  font-size: 0.68rem;
   border-radius: 999px;
   pointer-events: none;
   z-index: 2;
   border: 1px solid rgba(255,255,255,0.1);
 }
-.cam-chip-br {
-  position: absolute;
-  right: 10px; bottom: 10px;
-  background: rgba(0,0,0,0.65);
-  backdrop-filter: blur(8px);
-  color: #fff;
-  padding: 5px 10px;
-  font-size: 0.72rem;
-  border-radius: 999px;
-  pointer-events: none;
-  z-index: 2;
-  border: 1px solid rgba(255,255,255,0.1);
+/* On mobile shrink chips */
+@media (max-width: 700px) {
+  .cam-chip    { font-size: 0.68rem; }
+  .cam-chip-tr { font-size: 0.65rem; }
 }
-.cam-status-live { color: #34d399; }
+.cam-status-live  { color: #34d399; }
 .cam-status-error { color: #f87171; }
 
-/* OHGO link */
+/* OHGO link — bottom-right, clear of location chip */
 .cam-link {
   position: absolute;
-  left: 10px; bottom: 10px;
-  width: 28px; height: 28px;
+  right: 8px; bottom: 8px;
+  width: 26px; height: 26px;
   border-radius: 999px;
   z-index: 3;
   display: flex;
@@ -289,15 +284,15 @@ body::after {
   background: rgba(255,255,255,0.12);
   color: #fff;
   text-decoration: none;
-  font-size: 13px;
+  font-size: 12px;
   opacity: 0;
   transition: opacity 0.2s;
   border: 1px solid rgba(255,255,255,0.2);
 }
 .cam-tile:hover .cam-link { opacity: 1; }
-@media (hover: none) { .cam-link { opacity: 0.85; } }
+@media (hover: none) { .cam-link { display: none; } }
 
-/* Tap hint */
+/* Tap hint — simpler on mobile */
 .tap-hint {
   position: absolute;
   inset: 0;
@@ -307,14 +302,15 @@ body::after {
   opacity: 0;
   pointer-events: none;
   z-index: 4;
+  transition: opacity 0.15s;
 }
 .cam-tile:active .tap-hint { opacity: 1; }
 .tap-hint-inner {
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.6);
   color: #fff;
   border-radius: 999px;
-  padding: 8px 16px;
-  font-size: 0.8rem;
+  padding: 7px 14px;
+  font-size: 0.75rem;
   border: 1px solid rgba(255,255,255,0.15);
 }
 
@@ -322,20 +318,20 @@ body::after {
 .focus-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(12px);
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 9999;
-  padding: 16px;
+  padding: 12px;
 }
 .focus-overlay.on { display: flex; }
 .focus-card {
   width: min(1100px, 100%);
   aspect-ratio: 16 / 9;
   position: relative;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--glass-border);
   box-shadow: 0 24px 80px rgba(0,0,0,0.7);
@@ -351,41 +347,49 @@ body::after {
 }
 .focus-close {
   position: absolute;
-  top: 12px; right: 12px;
-  background: rgba(0,0,0,0.6);
+  top: 10px; right: 10px;
+  background: rgba(0,0,0,0.7);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.25);
   color: #fff;
   border-radius: 999px;
-  padding: 7px 14px;
+  padding: 8px 16px;
   cursor: pointer;
   z-index: 5;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-family: var(--font-body);
   transition: background 0.15s;
+  touch-action: manipulation;
 }
-.focus-close:hover { background: rgba(255,255,255,0.15); }
+.focus-close:hover { background: rgba(255,255,255,0.18); }
 .focus-meta {
   position: absolute;
-  left: 12px; bottom: 12px;
+  left: 10px; bottom: 10px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   z-index: 5;
-  max-width: calc(100% - 24px);
+  max-width: calc(100% - 20px);
 }
 .focus-pill {
-  background: rgba(0,0,0,0.65);
+  background: rgba(0,0,0,0.72);
   backdrop-filter: blur(8px);
   color: #fff;
   padding: 5px 10px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 240px;
   border: 1px solid rgba(255,255,255,0.1);
+}
+@media (max-width: 700px) {
+  .focus-overlay { padding: 8px; }
+  .focus-card { border-radius: 12px; }
+  .focus-pill:last-child { display: none; } /* hide timestamp on mobile */
+  .focus-pill { font-size: 0.68rem; max-width: 180px; }
+  .focus-close { padding: 8px 14px; font-size: 0.78rem; }
 }
 
 /* Footer */
@@ -431,36 +435,28 @@ body::after {
       <div class="cam-tile" id="g0" data-i="0">
         <img id="img0" alt="">
         <div class="cam-chip" id="lbl0">Loading…</div>
-        <div class="cam-chip-tr" id="st0">—</div>
-        <div class="cam-chip-br" id="ts0">—</div>
-        <a class="cam-link" id="lnk0" target="_blank" rel="noopener" title="View on OHGO">↗</a>
+        <div class="cam-chip-tr" id="st0">—</div>        <a class="cam-link" id="lnk0" target="_blank" rel="noopener" title="View on OHGO">↗</a>
         <div class="tap-hint"><div class="tap-hint-inner">Tap to expand</div></div>
       </div>
 
       <div class="cam-tile" id="g1" data-i="1">
         <img id="img1" alt="">
         <div class="cam-chip" id="lbl1">Loading…</div>
-        <div class="cam-chip-tr" id="st1">—</div>
-        <div class="cam-chip-br" id="ts1">—</div>
-        <a class="cam-link" id="lnk1" target="_blank" rel="noopener" title="View on OHGO">↗</a>
+        <div class="cam-chip-tr" id="st1">—</div>        <a class="cam-link" id="lnk1" target="_blank" rel="noopener" title="View on OHGO">↗</a>
         <div class="tap-hint"><div class="tap-hint-inner">Tap to expand</div></div>
       </div>
 
       <div class="cam-tile" id="g2" data-i="2">
         <img id="img2" alt="">
         <div class="cam-chip" id="lbl2">Loading…</div>
-        <div class="cam-chip-tr" id="st2">—</div>
-        <div class="cam-chip-br" id="ts2">—</div>
-        <a class="cam-link" id="lnk2" target="_blank" rel="noopener" title="View on OHGO">↗</a>
+        <div class="cam-chip-tr" id="st2">—</div>        <a class="cam-link" id="lnk2" target="_blank" rel="noopener" title="View on OHGO">↗</a>
         <div class="tap-hint"><div class="tap-hint-inner">Tap to expand</div></div>
       </div>
 
       <div class="cam-tile" id="g3" data-i="3">
         <img id="img3" alt="">
         <div class="cam-chip" id="lbl3">Loading…</div>
-        <div class="cam-chip-tr" id="st3">—</div>
-        <div class="cam-chip-br" id="ts3">—</div>
-        <a class="cam-link" id="lnk3" target="_blank" rel="noopener" title="View on OHGO">↗</a>
+        <div class="cam-chip-tr" id="st3">—</div>        <a class="cam-link" id="lnk3" target="_blank" rel="noopener" title="View on OHGO">↗</a>
         <div class="tap-hint"><div class="tap-hint-inner">Tap to expand</div></div>
       </div>
 
@@ -475,9 +471,7 @@ body::after {
     <button class="focus-close" id="focusClose">Close ✕</button>
     <img class="focus-img" id="focusImg" alt="">
     <div class="focus-meta">
-      <div class="focus-pill" id="focusLabel">—</div>
-      <div class="focus-pill" id="focusTime">—</div>
-      <div class="focus-pill" id="focusStatus">—</div>
+      <div class="focus-pill" id="focusLabel">—</div>      <div class="focus-pill" id="focusStatus">—</div>
     </div>
   </div>
 </div>
@@ -507,7 +501,6 @@ const focusOverlay= document.getElementById("focusOverlay");
 const focusImg    = document.getElementById("focusImg");
 const focusClose  = document.getElementById("focusClose");
 const focusLabel  = document.getElementById("focusLabel");
-const focusTime   = document.getElementById("focusTime");
 const focusStatus = document.getElementById("focusStatus");
 
 // Fit / Fill
@@ -538,8 +531,7 @@ function openFocus(i) {
   focusIndex = i;
   focusImg.src             = document.getElementById("img" + i)?.src || "";
   focusLabel.textContent   = document.getElementById("lbl" + i)?.textContent || "—";
-  focusTime.textContent    = document.getElementById("ts"  + i)?.textContent || "—";
-  focusStatus.textContent  = document.getElementById("st"  + i)?.textContent || "—";
+    focusStatus.textContent  = document.getElementById("st"  + i)?.textContent || "—";
   focusOverlay.classList.add("on");
 }
 function closeFocus() {
@@ -561,8 +553,7 @@ function syncFocus() {
   if (focusIndex === null) return;
   focusImg.src            = document.getElementById("img" + focusIndex)?.src || "";
   focusLabel.textContent  = document.getElementById("lbl" + focusIndex)?.textContent || "—";
-  focusTime.textContent   = document.getElementById("ts"  + focusIndex)?.textContent || "—";
-  focusStatus.textContent = document.getElementById("st"  + focusIndex)?.textContent || "—";
+    focusStatus.textContent = document.getElementById("st"  + focusIndex)?.textContent || "—";
 }
 
 // Helpers
@@ -589,7 +580,11 @@ function pickUrl(cam) {
 }
 function pickLabel(cam, fallback) {
   const loc = cam?.Location ?? cam?.location ?? cam?.Description ?? cam?.description ?? null;
-  return (typeof loc === "string" && loc.trim()) ? loc.trim() : `Camera ${fallback}`;
+  if (typeof loc === "string" && loc.trim()) {
+    // Strip trailing district codes like ", D11-007" or " D11-008"
+    return loc.trim().replace(/[,\s]+D\d{2}-\d{3,}/gi, "").trim();
+  }
+  return `Camera ${fallback}`;
 }
 
 // Data
@@ -607,8 +602,7 @@ async function updateOne(i) {
     const updated = j?.lastUpdated ?? cam?.LastUpdated ?? cam?.lastUpdated ?? null;
     const url     = pickUrl(cam);
     document.getElementById("lbl" + i).textContent = label;
-    document.getElementById("ts"  + i).textContent = fmt(updated);
-    if (!url) { document.getElementById("st" + i).textContent = "No image"; return updated || null; }
+        if (!url) { document.getElementById("st" + i).textContent = "No image"; return updated || null; }
     const src = `${url}${url.includes("?") ? "&" : "?"}t=${Date.now()}`;
     document.getElementById("img" + i).src = src;
     const stEl = document.getElementById("st" + i);

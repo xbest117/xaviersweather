@@ -96,7 +96,7 @@ body.storm-tracker #alertBar {
   animation: stAlertPulse 1.8s ease-in-out infinite;
 }
 body.storm-tracker #alertPanel {
-  background: rgba(127,29,29,0.5) !important;
+  background: rgba(80,10,10,0.97) !important;
   border-bottom-color: rgba(239,68,68,0.3) !important;
   color: #fca5a5 !important;
 }
@@ -283,23 +283,33 @@ body::after {
   cursor: pointer;
   position: sticky;
   top: 60px;
-  z-index: 99;
+  z-index: 98;
   transition: background 0.2s;
 }
+@media (max-width: 600px) { #alertBar { top: 52px; } }
 #alertBar:hover { background: rgba(245,158,11,0.26); }
 #alertPanel {
   display: none;
-  background: rgba(120,53,15,0.35);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(245,158,11,0.2);
-  padding: 16px 28px;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  z-index: 97;
+  background: rgba(80,40,5,0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(245,158,11,0.3);
+  padding: 16px 28px 20px;
   font-size: 0.82rem;
   line-height: 1.65;
   color: #fde68a;
   white-space: pre-wrap;
-  max-height: 300px;
+  max-height: 60vh;
   overflow-y: auto;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+}
+@media (max-width: 600px) {
+  #alertPanel { top: 52px; padding: 12px 16px 16px; }
 }
 
 .page-body {
@@ -2113,6 +2123,14 @@ alertBar.addEventListener("click", () => {
   alertBar.setAttribute("aria-expanded", String(!open));
 });
 alertBar.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") alertBar.click(); });
+// Close panel when clicking anywhere outside the alert bar/panel
+document.addEventListener("click", e => {
+  const panel = document.getElementById("alertPanel");
+  if (panel.style.display === "block" && !alertBar.contains(e.target) && !panel.contains(e.target)) {
+    panel.style.display = "none";
+    alertBar.setAttribute("aria-expanded", "false");
+  }
+});
 
 // ============================================================
 // LOAD RSS FEED  (JSONP — bypasses Google Sites CSP)
