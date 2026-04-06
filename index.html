@@ -1144,9 +1144,9 @@ iframe {
       <div style="display:flex; flex-direction:column; gap:20px; min-width:0; align-self:stretch; overflow:visible;">
 
         <div class="glass overflow-visible" style="flex:1; min-height:0; display:flex; flex-direction:column; overflow:visible;">
-          <div class="section-head">
+          <div class="section-head" style="flex-direction:column; align-items:flex-start; gap:4px;">
             <h2>7-Day Forecast</h2>
-            <div id="weeklyOutlook" style="font-size:0.72rem; color:var(--text-3); font-style:italic; margin-top:4px; line-height:1.4; padding: 0 2px;"></div>
+            <div id="weeklyOutlook" style="font-size:0.72rem; color:var(--text-3); font-style:italic; line-height:1.4;"></div>
           </div>
           <div class="forecast-grid" id="forecastBox"></div>
           <div class="cc-error" id="errForecast"></div>
@@ -1887,80 +1887,137 @@ async function loadWeather() {
     const outlookEl = document.getElementById("weeklyOutlook");
     if (outlookEl && periods.length >= 2) {
       const dayPeriods = periods.filter(p => p.isDaytime !== false).slice(0, 7);
+      const total = dayPeriods.length;
 
-      // Categorize each day
+      // Categorize each day with more detail
       const cats = dayPeriods.map(p => {
         const f = (p.shortForecast || "").toLowerCase();
         const t = p.temperature;
-        if (f.includes("thunder") || f.includes("storm"))  return { type:"storm",  t };
-        if (f.includes("snow") || f.includes("blizzard"))  return { type:"snow",   t };
-        if (f.includes("rain") || f.includes("shower") || f.includes("drizzle")) return { type:"rain", t };
-        if (f.includes("fog")  || f.includes("mist"))      return { type:"fog",    t };
-        if (f.includes("cloud") || f.includes("overcast")) return { type:"cloudy", t };
-        return { type:"clear", t };
+        const chance = p.probabilityOfPrecipitation?.value ?? 0;
+        if (f.includes("thunder") || f.includes("storm"))                          return { type:"storm",  t, chance };
+        if (f.includes("snow") || f.includes("blizzard") || f.includes("flurr"))  return { type:"snow",   t, chance };
+        if (f.includes("sleet") || f.includes("wintry") || f.includes("freezing"))return { type:"wintry", t, chance };
+        if (f.includes("rain") || f.includes("shower") || f.includes("drizzle"))  return { type:"rain",   t, chance };
+        if (f.includes("fog")  || f.includes("mist"))                              return { type:"fog",    t, chance };
+        if (f.includes("mostly cloudy") || f.includes("overcast"))                 return { type:"cloudy", t, chance };
+        if (f.includes("partly cloudy") || f.includes("partly sunny"))             return { type:"partly", t, chance };
+        if (f.includes("mostly sunny") || f.includes("mostly clear"))              return { type:"mostsun",t, chance };
+        if (f.includes("sunny") || f.includes("clear") || f.includes("fair"))     return { type:"clear",  t, chance };
+        return { type:"cloudy", t, chance };
       });
 
-      const temps  = cats.map(c => c.t).filter(Boolean);
-      const avgT   = temps.length ? Math.round(temps.reduce((a,b)=>a+b,0)/temps.length) : null;
-      const highT  = temps.length ? Math.max(...temps) : null;
-      const lowT   = temps.length ? Math.min(...temps) : null;
-      const types  = cats.map(c => c.type);
-      const names  = dayPeriods.map(p => p.name?.replace(/\s+Night$/i,"").trim());
+      const temps     = cats.map(c => c.t).filter(Boolean);
+      const avgT      = temps.length ? Math.round(temps.reduce((a,b)=>a+b,0)/temps.length) : null;
+      const highT     = temps.length ? Math.max(...temps) : null;
+      const lowT      = temps.length ? Math.min(...temps) : null;
+      const types     = cats.map(c => c.type);
+      const names     = dayPeriods.map(p => p.name?.replace(/\s+Night$/i,"").trim());
 
-      // Count weather types
+      // Counts
       const stormDays  = types.filter(t => t==="storm").length;
       const rainDays   = types.filter(t => t==="rain").length;
       const snowDays   = types.filter(t => t==="snow").length;
-      const clearDays  = types.filter(t => t==="clear").length;
+      const wintryDays = types.filter(t => t==="wintry").length;
+      const clearDays  = types.filter(t => t==="clear"||t==="mostsun").length;
+      const partlyDays = types.filter(t => t==="partly").length;
       const cloudyDays = types.filter(t => t==="cloudy").length;
+      const wetDays    = rainDays + stormDays;
+      const niceDays   = clearDays + partlyDays;
 
-      // Find first/last rain or storm day name
-      const firstWetIdx = types.findIndex(t => t==="rain"||t==="storm");
-      const lastWetIdx  = types.map((t,i)=>(t==="rain"||t==="storm")?i:-1).filter(i=>i>=0).pop() ?? -1;
-      const firstWetDay = firstWetIdx >= 0 ? names[firstWetIdx] : null;
-      const lastWetDay  = lastWetIdx  >= 0 ? names[lastWetIdx]  : null;
+      // Find named days for events
+      const firstWetIdx  = types.findIndex(t => t==="rain"||t==="storm");
+      const lastWetIdx   = [...types].map((t,i)=>(t==="rain"||t==="storm")?i:-1).filter(i=>i>=0).pop() ?? -1;
+      const firstClearIdx= types.findIndex(t => t==="clear"||t==="mostsun");
+      const firstSnowIdx = types.findIndex(t => t==="snow");
+      const firstWetDay  = firstWetIdx  >= 0 ? names[firstWetIdx]  : null;
+      const lastWetDay   = lastWetIdx   >= 0 ? names[lastWetIdx]   : null;
+      const firstClearDay= firstClearIdx>= 0 ? names[firstClearIdx]: null;
+      const firstSnowDay = firstSnowIdx >= 0 ? names[firstSnowIdx] : null;
 
-      // Build sentence parts
-      const parts = [];
+      // Is today wet?
+      const todayWet  = firstWetIdx  === 0;
+      const todayClear= firstClearIdx=== 0;
 
-      // Opening — overall character of the week
-      const wetDays = rainDays + stormDays;
-      if (snowDays >= 3)       parts.push("A snowy week ahead");
-      else if (stormDays >= 2) parts.push("A stormy stretch ahead");
-      else if (wetDays >= 4)   parts.push("A mostly wet week ahead");
-      else if (wetDays >= 2)   parts.push("A mix of sun and rain this week");
-      else if (clearDays >= 5) parts.push("A mostly sunny week ahead");
-      else if (cloudyDays >= 4)parts.push("A mostly cloudy week ahead");
-      else                     parts.push("A variable week ahead");
+      // Temperature context
+      const MONTHLY_NORMS = [35,38,48,60,70,79,83,81,74,62,50,38];
+      const norm = MONTHLY_NORMS[new Date().getMonth()];
+      const tempDiff = avgT !== null ? avgT - norm : 0;
+      const bigSwing = highT !== null && lowT !== null && (highT - lowT) >= 20;
 
-      // Precipitation timing
-      if (firstWetDay && firstWetDay === names[0]) {
-        if (lastWetDay && lastWetDay !== names[0]) parts.push(`with wet conditions persisting through ${lastWetDay}`);
-        else parts.push("starting with wet weather today");
-      } else if (firstWetDay) {
-        parts.push(`with ${stormDays > 0 ? "storms" : "rain"} arriving ${firstWetDay}`);
-        if (lastWetDay && lastWetDay !== firstWetDay) parts.push(`through ${lastWetDay}`);
+      // ── Build the sentence ──
+      let opening = "";
+      let detail  = "";
+      let tempNote= "";
+
+      // Opening — based on dominant pattern, much more specific
+      if (snowDays >= 4)         opening = "A snowy week ahead";
+      else if (snowDays >= 2)    opening = `Snow expected on ${snowDays} days this week`;
+      else if (wintryDays >= 2)  opening = "Wintry mixed precipitation possible several days";
+      else if (stormDays >= 3)   opening = "A stormy week with frequent thunderstorm chances";
+      else if (stormDays >= 1 && rainDays >= 2) opening = "Unsettled weather through much of the week";
+      else if (stormDays === 1)  opening = `Isolated storm chance ${names[types.indexOf("storm")]}`;
+      else if (wetDays >= 5)     opening = "A predominantly wet week ahead";
+      else if (wetDays === 4)    opening = "Frequent rain chances through the week";
+      else if (wetDays === 3)    opening = "Several rounds of rain expected this week";
+      else if (wetDays === 2)    opening = `Rain on ${wetDays} days, otherwise ${niceDays >= 3 ? "mostly pleasant" : "partly cloudy"}`;
+      else if (wetDays === 1)    opening = `Just one chance of rain${firstWetDay ? ` — ${firstWetDay}` : ""}`;
+      else if (clearDays >= 5)   opening = "A beautiful stretch of weather ahead";
+      else if (clearDays >= 4)   opening = "Mostly sunny and dry through the week";
+      else if (niceDays >= 5)    opening = "A mostly pleasant week with limited rain chances";
+      else if (cloudyDays >= 5)  opening = "A gray, overcast week with little sunshine";
+      else if (cloudyDays >= 3 && wetDays === 0) opening = "Cloudy but dry through much of the week";
+      else if (partlyDays >= 4)  opening = "A partly cloudy week with a mix of sun and clouds";
+      else                       opening = "A changeable week with varied conditions";
+
+      // Detail — timing and transitions
+      if (wetDays >= 2) {
+        if (todayWet && lastWetDay && lastWetDay !== names[0]) {
+          detail = `Wet conditions continue through ${lastWetDay}`;
+          if (firstClearDay && firstClearIdx > lastWetIdx) detail += `, clearing by ${firstClearDay}`;
+        } else if (todayWet) {
+          detail = "Rain wraps up today";
+          if (firstClearDay) detail += `, ${firstClearDay} looks nicer`;
+        } else if (firstWetDay && lastWetDay && firstWetDay !== lastWetDay) {
+          detail = `Rain arrives ${firstWetDay} and lingers through ${lastWetDay}`;
+        } else if (firstWetDay) {
+          detail = `Rain expected ${firstWetDay}`;
+          if (firstClearIdx > firstWetIdx) detail += `, drying out after`;
+        }
+      } else if (wetDays === 1 && opening.includes("Just one")) {
+        // Already handled in opening
+        if (firstClearDay && !todayClear) detail = `Otherwise ${firstClearDay} onward looks dry`;
+      } else if (wetDays === 0 && firstClearDay && !todayClear) {
+        detail = `Dry conditions persist all week`;
+      } else if (stormDays === 1) {
+        detail = `Dry before and after the storm`;
       }
 
-      // Snow note
-      if (snowDays > 0 && snowDays < 3) {
-        const snowIdx = types.findIndex(t=>t==="snow");
-        parts.push(`snow possible ${names[snowIdx]}`);
+      // Snow addendum
+      if (snowDays > 0 && snowDays < 4 && !opening.includes("now")) {
+        detail = detail ? detail + `. Snow possible ${firstSnowDay}` : `Snow possible ${firstSnowDay}`;
+      }
+      if (wintryDays > 0 && snowDays === 0) {
+        detail = detail ? detail + `, wintry mix possible` : `Wintry mix possible`;
       }
 
       // Temperature note
-      if (avgT !== null) {
-        // Monthly normal highs for Tuscarawas County (NWS historical averages)
-        const MONTHLY_NORMS = [35,38,48,60,70,79,83,81,74,62,50,38];
-        const norm = MONTHLY_NORMS[new Date().getMonth()];
-        const diff = avgT - norm;
-        if (highT - lowT >= 20) parts.push(`with a wide temperature swing from ${lowT}° to ${highT}°`);
-        else if (diff >= 8)  parts.push(`temperatures running above normal near ${highT}°`);
-        else if (diff <= -8) parts.push(`temperatures running below normal near ${lowT}°`);
-        else                 parts.push(`temperatures near seasonal norms`);
+      if (bigSwing) {
+        tempNote = `Temperatures swing from ${lowT}° to ${highT}° — dress in layers`;
+      } else if (tempDiff >= 10) {
+        tempNote = `Well above normal — highs near ${highT}°`;
+      } else if (tempDiff >= 6) {
+        tempNote = `Above normal with highs near ${highT}°`;
+      } else if (tempDiff <= -10) {
+        tempNote = `Well below normal — highs only near ${lowT}°`;
+      } else if (tempDiff <= -6) {
+        tempNote = `Below normal with highs near ${lowT}°`;
+      } else if (highT !== null) {
+        tempNote = `Temperatures near normal in the ${lowT !== null ? lowT+"°–"+highT+"° range" : highT+"°s"}`;
       }
 
-      outlookEl.textContent = parts.join(", ") + ".";
+      // Assemble
+      const sentenceParts = [opening, detail, tempNote].filter(Boolean);
+      outlookEl.textContent = sentenceParts.join(". ") + ".";
     }
     const strip = document.getElementById("hourlyStrip");
     strip.innerHTML = "";
