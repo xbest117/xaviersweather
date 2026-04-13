@@ -1266,10 +1266,11 @@ const OPEN_METEO_URL      = "https://api.open-meteo.com/v1/forecast?latitude=40.
   "&daily=sunrise,sunset,uv_index_max,precipitation_sum,snowfall_sum,precipitation_hours" +
   "&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FNew_York";
 
-const AQI_URL = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.4756&longitude=-81.4467" +
+const AQI_URL    = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.4756&longitude=-81.4467" +
   "&current=us_aqi,pm2_5,pm10,ozone" +
-  "&hourly=alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,ragweed_pollen,olive_pollen" +
   "&timezone=America%2FNew_York&forecast_days=1";
+const GOOGLE_POLLEN_KEY = "AIzaSyC9ZdkKuQOEJ9IVs3CoNNV81tfAwYGI0iQ";
+const GOOGLE_POLLEN_URL = `https://pollen.googleapis.com/v1/forecast:lookup?key=${GOOGLE_POLLEN_KEY}&location.longitude=-81.4467&location.latitude=40.4756&days=1`;
 
 const CLIMATE_URL = "https://climate-api.open-meteo.com/v1/climate?latitude=40.4756&longitude=-81.4467" +
   "&start_date=1991-01-01&end_date=2020-12-31" +
@@ -2088,6 +2089,7 @@ async function loadWeather() {
 
     document.getElementById("statusText").textContent = "Live · " + formatTime(new Date());
     document.getElementById("errNow").textContent = "";
+    _lastWeatherLoad = Date.now();
 
   } catch (err) {
     console.error("Weather load error:", err);
@@ -2168,6 +2170,7 @@ async function loadAlerts() {
        a.instruction  ? "\n" + a.instruction  : ""]
       .filter(Boolean).join("\n") + "\n\n" + "─".repeat(40)
     ).join("\n\n").trim();
+    _lastAlertLoad = Date.now();
   } catch (e) {
     console.warn("Alert fetch error:", e);
   }
@@ -2280,14 +2283,6 @@ async function loadExtras() {
     return             ["Hazardous",         "#f43f5e"];
   }
 
-  function pollenLevel(v) {
-    if (v == null || v === 0) return "None";
-    if (v < 10)  return "Low";
-    if (v < 50)  return "Moderate";
-    if (v < 200) return "High";
-    return "Very High";
-  }
-
   function moonPhase() {
     // Simple moon phase calc (synodic period ~29.53 days)
     const known = new Date("2000-01-06T18:14:00Z"); // known new moon
@@ -2310,31 +2305,48 @@ async function loadExtras() {
   const moon = moonPhase();
   chip("eMoon", "Moon Phase", moon.icon + " " + moon.name, null, null);
 
-  // ---- AQI + Pollen ----
+  // ---- AQI ----
   try {
     const aqiRes  = await fetch(AQI_URL);
     const aqiData = await aqiRes.json();
-
     const aqi = aqiData.current?.us_aqi ?? null;
     const [aqiLbl, aqiColor] = aqiLabel(aqi);
     chip("eAQI", "Air Quality", aqi != null ? `AQI ${aqi}` : "—", aqiLbl, aqiColor);
-
-    // Pollen — use hourly index 0 (current hour)
-    const h = aqiData.hourly;
-    const i = 0;
-    const grass   = h?.grass_pollen?.[i]   ?? null;
-    const tree    = (h?.alder_pollen?.[i] ?? 0) + (h?.birch_pollen?.[i] ?? 0) + (h?.olive_pollen?.[i] ?? 0);
-    const weed    = (h?.ragweed_pollen?.[i] ?? 0) + (h?.mugwort_pollen?.[i] ?? 0);
-    const maxPollen = Math.max(grass ?? 0, tree, weed);
-    const pollenType = grass >= tree && grass >= weed ? "Grass"
-      : tree >= weed ? "Tree" : "Weed";
-    chip("ePollen", "Pollen", pollenLevel(maxPollen),
-      maxPollen > 0 ? pollenType + " dominant" : "All types low",
-      maxPollen >= 200 ? "#f87171" : maxPollen >= 50 ? "#fbbf24" : maxPollen >= 10 ? "#fb923c" : "#34d399");
   } catch(e) {
-    chip("eAQI",    "Air Quality", "—", null, null);
-    chip("ePollen", "Pollen",      "—", null, null);
-    console.warn("AQI/Pollen error:", e);
+    chip("eAQI", "Air Quality", "—", null, null);
+    console.warn("AQI error:", e);
+  }
+
+  // ---- Pollen — Google Pollen API ----
+  try {
+    const polRes  = await fetch(GOOGLE_POLLEN_URL);
+    const polData = await polRes.json();
+    const daily   = polData.dailyInfo?.[0];
+    const types   = daily?.pollenTypeInfo || [];
+
+    let maxIndex = 0;
+    let maxType  = null;
+    let maxLabel = "None";
+    types.forEach(t => {
+      const idx = t.indexInfo?.value ?? 0;
+      if (idx > maxIndex) {
+        maxIndex = idx;
+        maxType  = t.displayName;
+        maxLabel = t.indexInfo?.category ?? "None";
+      }
+    });
+
+    // Google uses 0-5 scale: 0=None,1=Very Low,2=Low,3=Moderate,4=High,5=Very High
+    const polColor = maxIndex >= 4 ? "#f87171"
+                   : maxIndex >= 3 ? "#fbbf24"
+                   : maxIndex >= 2 ? "#fb923c"
+                   : maxIndex >= 1 ? "#a3e635"
+                   : "#34d399";
+    const subText = maxType ? `${maxType} dominant` : "All types low";
+    chip("ePollen", "Pollen", maxLabel, maxIndex > 0 ? subText : "All types low", polColor);
+  } catch(e) {
+    chip("ePollen", "Pollen", "—", null, null);
+    console.warn("Pollen error:", e);
   }
 
   // ---- Precip + Snow from Open-Meteo daily ----
@@ -2394,6 +2406,7 @@ async function loadExtras() {
         chip("eHist", "vs. Normal", "—", null, null);
       }
     }
+    _lastExtrasLoad = Date.now();
   } catch(e) {
     chip("eHist", "vs. Normal", "—", null, null);
     console.warn("Historical error:", e);
@@ -2403,16 +2416,48 @@ async function loadExtras() {
 // ============================================================
 // INIT
 // ============================================================
-loadWeather();
+let _lastWeatherLoad = 0;
+let _lastAlertLoad   = 0;
+let _lastExtrasLoad  = 0;
+
+async function loadWeatherWithRetry(attempt = 1) {
+  try {
+    await loadWeather();
+    _lastWeatherLoad = Date.now();
+  } catch(e) {
+    if (attempt < 3) {
+      setTimeout(() => loadWeatherWithRetry(attempt + 1), attempt * 3000);
+    }
+  }
+}
+
+loadWeatherWithRetry();
 loadAlerts();
 loadRSS();
 loadExtras();
 loadFunFact();
 document.getElementById("footerYear").textContent = new Date().getFullYear();
+
 setInterval(loadWeather, 600_000);
 setInterval(loadAlerts,  900_000);
 setInterval(loadRSS,    1800_000);
 setInterval(loadExtras, 1800_000);
+
+// Refresh when app is brought back to foreground (e.g. switching back from cameras)
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  const now = Date.now();
+  // Re-fetch if data is more than 2 minutes stale
+  if (now - _lastWeatherLoad > 120_000) loadWeatherWithRetry();
+  if (now - _lastAlertLoad   > 120_000) loadAlerts();
+  if (now - _lastExtrasLoad  > 120_000) loadExtras();
+});
+
+// Also refresh on page focus (catches PWA resume on some iOS versions)
+window.addEventListener("focus", () => {
+  const now = Date.now();
+  if (now - _lastWeatherLoad > 120_000) loadWeatherWithRetry();
+});
 
 </script>
 
