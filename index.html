@@ -1266,11 +1266,7 @@ const OPEN_METEO_URL      = "https://api.open-meteo.com/v1/forecast?latitude=40.
   "&daily=sunrise,sunset,uv_index_max,precipitation_sum,snowfall_sum,precipitation_hours" +
   "&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FNew_York";
 
-const AQI_URL    = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=40.4756&longitude=-81.4467" +
-  "&current=us_aqi,pm2_5,pm10,ozone" +
-  "&timezone=America%2FNew_York&forecast_days=1";
-const GOOGLE_POLLEN_KEY = "AIzaSyC9ZdkKuQOEJ9IVs3CoNNV81tfAwYGI0iQ";
-const GOOGLE_POLLEN_URL = `https://pollen.googleapis.com/v1/forecast:lookup?key=${GOOGLE_POLLEN_KEY}&location.longitude=-81.4467&location.latitude=40.4756&days=1`;
+const AQI_URL    = "https://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&zipCode=44663&distance=25&API_KEY=6872DC25-7E4F-463D-BD97-0F691E4335EC";
 
 const CLIMATE_URL = "https://climate-api.open-meteo.com/v1/climate?latitude=40.4756&longitude=-81.4467" +
   "&start_date=1991-01-01&end_date=2020-12-31" +
@@ -2305,49 +2301,68 @@ async function loadExtras() {
   const moon = moonPhase();
   chip("eMoon", "Moon Phase", moon.icon + " " + moon.name, null, null);
 
-  // ---- AQI ----
+  // ---- AQI — AirNow API (nearest station to zip 44663) ----
   try {
     const aqiRes  = await fetch(AQI_URL);
     const aqiData = await aqiRes.json();
-    const aqi = aqiData.current?.us_aqi ?? null;
+    // AirNow returns array of pollutant observations — pick highest AQI
+    const obs = Array.isArray(aqiData) ? aqiData : [];
+    const best = obs.sort((a, b) => (b.AQI ?? 0) - (a.AQI ?? 0))[0];
+    const aqi  = best?.AQI ?? null;
     const [aqiLbl, aqiColor] = aqiLabel(aqi);
-    chip("eAQI", "Air Quality", aqi != null ? `AQI ${aqi}` : "—", aqiLbl, aqiColor);
+    const src = best?.ReportingArea ? ` (${best.ReportingArea})` : "";
+    chip("eAQI", "Air Quality", aqi != null ? `AQI ${aqi}` : "—", aqi != null ? aqiLbl + src : null, aqiColor);
   } catch(e) {
     chip("eAQI", "Air Quality", "—", null, null);
     console.warn("AQI error:", e);
   }
 
-  // ---- Pollen — Google Pollen API ----
-  try {
-    const polRes  = await fetch(GOOGLE_POLLEN_URL);
-    const polData = await polRes.json();
-    const daily   = polData.dailyInfo?.[0];
-    const types   = daily?.pollenTypeInfo || [];
+  // ---- Pollen — seasonal estimate for Tuscarawas County ----
+  // Based on typical NE Ohio pollen calendar (no API needed)
+  (function() {
+    const m = new Date().getMonth() + 1; // 1=Jan
+    const d = new Date().getDate();
+    let level, type, color;
 
-    let maxIndex = 0;
-    let maxType  = null;
-    let maxLabel = "None";
-    types.forEach(t => {
-      const idx = t.indexInfo?.value ?? 0;
-      if (idx > maxIndex) {
-        maxIndex = idx;
-        maxType  = t.displayName;
-        maxLabel = t.indexInfo?.category ?? "None";
-      }
-    });
+    if (m === 1 || m === 2) {
+      // Jan–Feb: dormant season
+      level = "None"; type = "Dormant season"; color = "#34d399";
+    } else if (m === 3) {
+      // March: early tree pollen (elm, maple)
+      level = d < 15 ? "Low" : "Moderate";
+      type = "Tree pollen season beginning"; color = d < 15 ? "#a3e635" : "#fb923c";
+    } else if (m === 4) {
+      // April: peak tree pollen (oak, birch, ash)
+      level = "High"; type = "Tree pollen — Oak, Birch, Ash"; color = "#fbbf24";
+    } else if (m === 5) {
+      // May: tree pollen fading, grass beginning
+      level = d < 15 ? "High" : "Moderate";
+      type = d < 15 ? "Tree pollen — Oak, Grass beginning" : "Grass pollen rising"; color = d < 15 ? "#fbbf24" : "#fb923c";
+    } else if (m === 6) {
+      // June: peak grass pollen
+      level = "High"; type = "Grass pollen — peak season"; color = "#fbbf24";
+    } else if (m === 7) {
+      // July: grass fading, weeds beginning
+      level = d < 15 ? "Moderate" : "Low";
+      type = "Grass pollen fading"; color = d < 15 ? "#fb923c" : "#a3e635";
+    } else if (m === 8) {
+      // August: ragweed season begins
+      level = d < 15 ? "Low" : "Moderate";
+      type = d < 15 ? "Weed pollen rising" : "Ragweed season beginning"; color = d < 15 ? "#a3e635" : "#fb923c";
+    } else if (m === 9) {
+      // September: peak ragweed
+      level = "High"; type = "Ragweed pollen — peak season"; color = "#fbbf24";
+    } else if (m === 10) {
+      // October: ragweed fading
+      level = d < 15 ? "Moderate" : "Low";
+      type = "Ragweed fading"; color = d < 15 ? "#fb923c" : "#a3e635";
+    } else {
+      // Nov–Dec: dormant
+      level = "None"; type = "Dormant season"; color = "#34d399";
+    }
 
-    // Google uses 0-5 scale: 0=None,1=Very Low,2=Low,3=Moderate,4=High,5=Very High
-    const polColor = maxIndex >= 4 ? "#f87171"
-                   : maxIndex >= 3 ? "#fbbf24"
-                   : maxIndex >= 2 ? "#fb923c"
-                   : maxIndex >= 1 ? "#a3e635"
-                   : "#34d399";
-    const subText = maxType ? `${maxType} dominant` : "All types low";
-    chip("ePollen", "Pollen", maxLabel, maxIndex > 0 ? subText : "All types low", polColor);
-  } catch(e) {
-    chip("ePollen", "Pollen", "—", null, null);
-    console.warn("Pollen error:", e);
-  }
+    chip("ePollen", "Pollen", level, type, color);
+  })();
 
   // ---- Precip + Snow from Open-Meteo daily ----
   try {
