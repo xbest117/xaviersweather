@@ -15,11 +15,10 @@
 <link rel="apple-touch-icon" href="https://xaviersweather.com/icon-180.png" />
 <link rel="apple-touch-icon" sizes="152x152" href="https://xaviersweather.com/icon-152.png" />
 <link rel="apple-touch-icon" sizes="144x144" href="https://xaviersweather.com/icon-144.png" />
-<link rel="apple-touch-icon" sizes="192x192" href="https://xaviersweather.com/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <title>Xavier's Weather Channel</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
 
@@ -248,6 +247,7 @@ body::after {
 .topbar-cameras-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   font-size: 0.73rem;
   color: var(--text-2);
@@ -258,6 +258,7 @@ body::after {
   padding: 4px 12px;
   transition: background 0.2s, color 0.2s;
   white-space: nowrap;
+  line-height: 1;
 }
 .topbar-cameras-btn:hover { background: rgba(255,255,255,0.12); color: var(--text-1); }
 .status-dot {
@@ -377,14 +378,6 @@ iframe {
   padding: 28px 24px 22px;
   border-bottom: 1px solid var(--glass-border-b);
 }
-.cc-greeting {
-  padding: 14px 24px 0;
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--text-2);
-  letter-spacing: 0.02em;
-}
-
 .cc-location {
   font-size: 0.68rem;
   font-weight: 800;
@@ -451,10 +444,14 @@ iframe {
 .cc-sun-row {
   display: grid;
   grid-template-columns: 1fr 1fr 2fr;
-  gap: 8px;
-  padding: 14px 24px 16px;
+  gap: 10px;
+  padding: 12px 24px;
+  align-items: center;
   border-top: 1px solid var(--glass-border-b);
   border-bottom: 1px solid var(--glass-border-b);
+}
+@media (max-width: 800px) {
+  .cc-sun-row { grid-template-columns: 1fr 1fr 2fr; }
 }
 .cc-sun-chip {
   background: var(--glass-inset);
@@ -993,7 +990,7 @@ iframe {
       </a>
     </div>
     <div class="topbar-status">
-      <a href="/cameras.html" class="topbar-cameras-btn">📷 <span class="cam-btn-label">County Cameras</span></a>
+      <a href="/cameras.html" class="topbar-cameras-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg> <span class="cam-btn-label">County Cameras</span></a>
       <div class="status-dot"></div>
       <span id="statusText">Loading…</span>
     </div>
@@ -1011,7 +1008,6 @@ iframe {
 
       <!-- Current Conditions -->
       <div class="glass" style="overflow:hidden;">
-        <div class="cc-greeting" id="ccGreeting"></div>
         <div class="cc-hero">
           <div class="cc-location">
             <span id="hNow">Loading…</span>
@@ -1119,14 +1115,17 @@ iframe {
 
         </div>
 
-        <!-- Extra info chips: AQI, Pollen, Precip, Snow, Moon, Historical -->
+        <!-- Extra info chips: AQI, Pollen, Precip, Snow, Moon, Historical, Feels Trend, Outdoor, Weekend -->
         <div class="cc-extra-row" id="extraRow">
-          <div class="cc-extra-chip" id="eAQI"    aria-label="Air Quality"></div>
-          <div class="cc-extra-chip" id="ePollen" aria-label="Pollen"></div>
-          <div class="cc-extra-chip" id="ePrecip" aria-label="Precipitation"></div>
-          <div class="cc-extra-chip" id="eSnow"   aria-label="Snow"></div>
-          <div class="cc-extra-chip" id="eMoon"   aria-label="Moon Phase"></div>
-          <div class="cc-extra-chip" id="eHist"   aria-label="Historical"></div>
+          <div class="cc-extra-chip" id="eAQI"      aria-label="Air Quality"></div>
+          <div class="cc-extra-chip" id="ePollen"   aria-label="Pollen"></div>
+          <div class="cc-extra-chip" id="ePrecip"   aria-label="Precipitation"></div>
+          <div class="cc-extra-chip" id="eSnow"     aria-label="Snow"></div>
+          <div class="cc-extra-chip" id="eMoon"     aria-label="Moon Phase"></div>
+          <div class="cc-extra-chip" id="eHist"     aria-label="Historical"></div>
+          <div class="cc-extra-chip" id="eFeels"    aria-label="Feels Like Trend"></div>
+          <div class="cc-extra-chip" id="eOutdoor"  aria-label="Outdoor Rating"></div>
+          <div class="cc-extra-chip" id="eWeekend"  aria-label="Weekend Outlook"></div>
         </div>
 
         <div class="cc-hourly">
@@ -1222,7 +1221,7 @@ iframe {
       <div style="display:flex; align-items:flex-start; gap:16px; padding:22px 28px;">
         <div class="funfact-icon">📅</div>
         <div class="funfact-body" style="flex:1;">
-          <div class="funfact-label" id="otdLabel">On This Day in Tuscarawas County</div>
+          <div class="funfact-label" id="otdLabel">This Month in Tuscarawas County History</div>
           <div class="funfact-text" id="otdText"></div>
         </div>
       </div>
@@ -1618,6 +1617,7 @@ function applyTheme(summary, isNight) {
 // ============================================================
 // LOAD WEATHER
 // ============================================================
+let _omFull = null; // shared Open-Meteo full response for reuse across functions
 async function loadWeather() {
   document.getElementById("statusText").textContent = "Updating…";
   try {
@@ -1644,15 +1644,15 @@ async function loadWeather() {
 
     // If station is offline, fetch Open-Meteo as fallback
     let om = null;
-    if (obsStale) {
-      try {
-        const omRes = await fetch(OPEN_METEO_URL);
-        if (omRes.ok) {
-          const omJson = await omRes.json();
-          om = omJson.current || null;
-        }
-      } catch (e) { console.warn("Open-Meteo fallback failed:", e); }
-    }
+    let omFull = null;
+    try {
+      const omRes = await fetch(OPEN_METEO_URL);
+      if (omRes.ok) {
+        omFull = await omRes.json();
+        _omFull = omFull; // share for loadExtras
+        om = omFull.current || null;
+      }
+    } catch (e) { console.warn("Open-Meteo fetch failed:", e); }
 
     // Parse hourly data up front so fallback can use it
     let hourlyPeriods = [];
@@ -1671,8 +1671,6 @@ async function loadWeather() {
 
     // Location
     document.getElementById("hNow").textContent = "New Philadelphia, OH";
-    // Greeting
-    const hr = new Date().getHours();
 
     // Temperature — obs → Open-Meteo → hourly → daily forecast
     let tempText = "N/A";
@@ -1695,13 +1693,17 @@ async function loadWeather() {
     document.getElementById("detailNow").textContent = cur.detailedForecast || "";
 
     // Icon & theme — obs → Open-Meteo → hourly → daily
-    const isNightNow = om ? !om.is_day : hourlyNow ? !hourlyNow.isDaytime : (new Date().getHours() >= 20 || new Date().getHours() < 6);
-    const greeting = isNightNow
-      ? "Good night 🌙"
-      : hr < 12 ? "Good morning ☀️"
-      : hr < 17 ? "Good afternoon 🌤️"
-      : "Good evening 🌅";
-    document.getElementById("ccGreeting").textContent = greeting;
+    const _now = new Date();
+    const _todayStr = _now.toISOString().slice(0, 10);
+    const _daily = omFull?.daily;
+    const _didx  = (_daily?.time || []).indexOf(_todayStr);
+    const _sr = _didx !== -1 && _daily?.sunrise?.[_didx] ? new Date(_daily.sunrise[_didx]) : null;
+    const _ss = _didx !== -1 && _daily?.sunset?.[_didx]  ? new Date(_daily.sunset[_didx])  : null;
+    const isNightNow = _sr && _ss
+      ? (_now < _sr || _now > _ss)
+      : om?.is_day != null ? !om.is_day
+      : hourlyNow ? !hourlyNow.isDaytime
+      : (_now.getHours() >= 20 || _now.getHours() < 6);
     const iconType = (!obsStale ? iconTypeFromObs(obs, isNightNow) : null)
       || (om ? resolveIcon(omCondText, isNightNow) : null)
       || resolveIcon(hourlyNow?.shortForecast || cur.shortForecast, isNightNow);
@@ -1800,22 +1802,20 @@ async function loadWeather() {
       timesEl.textContent = t;
     }
 
-    // Sun & UV — from Open-Meteo (live current UV + daily max + sunrise/sunset)
+    // Sun & UV — reuse already-fetched Open-Meteo data
     {
       const todayStr = new Date().toISOString().slice(0, 10);
       let sunrise = null, sunset = null, uvNow = null, uvMax = null;
       try {
-        const omRes2  = await fetch(OPEN_METEO_URL);
-        const omData2 = await omRes2.json();
-        const daily   = omData2.daily;
-        const idx     = (daily?.time || []).indexOf(todayStr);
+        const daily = omFull?.daily;
+        const idx   = (daily?.time || []).indexOf(todayStr);
         if (idx !== -1) {
           sunrise = daily.sunrise?.[idx] ? new Date(daily.sunrise[idx]) : null;
           sunset  = daily.sunset?.[idx]  ? new Date(daily.sunset[idx])  : null;
           uvMax   = daily.uv_index_max?.[idx] ?? null;
         }
-        uvNow = omData2.current?.uv_index ?? null;
-      } catch (e) { console.warn("Sun/UV fetch error:", e); }
+        uvNow = om?.uv_index ?? null;
+      } catch (e) { console.warn("Sun/UV error:", e); }
 
       document.getElementById("sSunriseVal").textContent =
         sunrise ? formatTime(sunrise) : "—";
@@ -1849,6 +1849,186 @@ async function loadWeather() {
 
     // 7-Day forecast cards
     const box  = document.getElementById("forecastBox");
+
+    // ---- Feels Like Trend chip ----
+    if (hourlyPeriods.length >= 6) {
+      const nowTemp  = om?.apparent_temperature ?? om?.temperature_2m ?? null;
+      const future   = hourlyPeriods.slice(1, 7); // next 6 hours
+      const futureTemps = future.map(h => h.temperature).filter(t => typeof t === "number");
+      if (nowTemp != null && futureTemps.length) {
+        const avgFuture = futureTemps.reduce((a,b)=>a+b,0) / futureTemps.length;
+        const diff = avgFuture - nowTemp;
+        const trend = diff > 3 ? "↑ Warming" : diff < -3 ? "↓ Cooling" : "→ Steady";
+        const color = diff > 3 ? "#f87171" : diff < -3 ? "#93c5fd" : "#a3e635";
+        const detail = diff > 3
+          ? `Up ~${Math.round(diff)}° over next 6 hrs`
+          : diff < -3
+          ? `Down ~${Math.abs(Math.round(diff))}° over next 6 hrs`
+          : "Little change expected";
+        chip("eFeels", "Feels Like Trend", trend, detail, color);
+        chipTooltip("eFeels", `Current apparent temperature: ${Math.round(nowTemp)}°F. Average over next 6 hours: ${Math.round(avgFuture)}°F. ${detail}.`);
+      } else {
+        chip("eFeels", "Feels Like Trend", "—", null, null);
+      }
+    }
+
+    // ---- Outdoor Activity Rating ----
+    {
+      const tempNow = om?.temperature_2m ?? null;
+      if (tempNow != null) {
+        // Use next 12 hours of hourly data for a more meaningful rating
+        const next12 = hourlyPeriods.slice(0, 12);
+        const maxPop  = next12.length ? Math.max(...next12.map(h => h.probabilityOfPrecipitation?.value ?? 0)) : 0;
+        const maxTemp = next12.length ? Math.max(...next12.map(h => h.temperature ?? tempNow)) : tempNow;
+        const minTemp = next12.length ? Math.min(...next12.map(h => h.temperature ?? tempNow)) : tempNow;
+        const wind    = om?.wind_speed_10m ?? 0;
+        const uv      = om?.uv_index ?? 0;
+
+        let score = 100;
+
+        // Precip — use worst chance in next 12 hours
+        if (maxPop >= 70)      score -= 55;
+        else if (maxPop >= 50) score -= 40;
+        else if (maxPop >= 30) score -= 22;
+        else if (maxPop >= 20) score -= 10;
+
+        // Temperature comfort — use current temp
+        if      (tempNow < 25)  score -= 30;
+        else if (tempNow < 35)  score -= 20;
+        else if (tempNow < 45)  score -= 12;
+        else if (tempNow < 55)  score -= 5;
+        else if (tempNow > 100) score -= 30;
+        else if (tempNow > 92)  score -= 18;
+        else if (tempNow > 85)  score -= 8;
+        else if (tempNow >= 62 && tempNow <= 80) score += 5; // perfect temp bonus
+
+        // Wind
+        if (wind > 30)      score -= 20;
+        else if (wind > 20) score -= 12;
+        else if (wind > 12) score -= 5;
+
+        // UV
+        if (uv > 10)     score -= 10;
+        else if (uv > 7) score -= 5;
+
+        score = Math.max(0, Math.min(100, score));
+        const rating = score >= 85 ? "Excellent 🌟"
+          : score >= 70 ? "Good 👍"
+          : score >= 50 ? "Fair 🤷"
+          : score >= 30 ? "Poor 👎"
+          : "Stay Inside 🏠";
+        const color = score >= 85 ? "#34d399"
+          : score >= 70 ? "#a3e635"
+          : score >= 50 ? "#fbbf24"
+          : score >= 30 ? "#fb923c"
+          : "#f87171";
+        const sub = maxPop > 0 ? `Score: ${score}/100 · ${maxPop}% rain chance` : `Score: ${score}/100 · ${Math.round(tempNow)}°F, ${wind} mph wind`;
+        chip("eOutdoor", "Outdoor Rating", rating, sub, color);
+
+        // Build explanation for tooltip
+        const reasons = [];
+        if (maxPop >= 70)       reasons.push(`⛈️ High rain chance (${maxPop}%) in next 12 hrs`);
+        else if (maxPop >= 50)  reasons.push(`🌧️ Likely rain (${maxPop}%) in next 12 hrs`);
+        else if (maxPop >= 30)  reasons.push(`🌦️ Rain possible (${maxPop}%) in next 12 hrs`);
+        else if (maxPop >= 20)  reasons.push(`💧 Slight rain chance (${maxPop}%)`);
+        else                    reasons.push(`☀️ Little to no rain expected`);
+        if (tempNow < 35)       reasons.push(`🥶 Very cold (${Math.round(tempNow)}°F)`);
+        else if (tempNow < 45)  reasons.push(`🧥 Cold (${Math.round(tempNow)}°F)`);
+        else if (tempNow < 55)  reasons.push(`🌬️ Cool (${Math.round(tempNow)}°F)`);
+        else if (tempNow > 92)  reasons.push(`🥵 Very hot (${Math.round(tempNow)}°F)`);
+        else if (tempNow > 85)  reasons.push(`☀️ Hot (${Math.round(tempNow)}°F)`);
+        else                    reasons.push(`🌡️ Comfortable temperature (${Math.round(tempNow)}°F)`);
+        if (wind > 30)          reasons.push(`💨 Very windy (${wind} mph)`);
+        else if (wind > 20)     reasons.push(`💨 Windy (${wind} mph)`);
+        else if (wind > 12)     reasons.push(`🍃 Breezy (${wind} mph)`);
+        else                    reasons.push(`😌 Calm winds (${wind} mph)`);
+        if (uv > 10)            reasons.push(`🔆 Extreme UV (${uv?.toFixed(1)})`);
+        else if (uv > 7)        reasons.push(`😎 High UV — wear sunscreen (${uv?.toFixed(1)})`);
+        chipTooltip("eOutdoor", reasons.join("\n"));
+      } else {
+        chip("eOutdoor", "Outdoor Rating", "—", null, null);
+      }
+    }
+
+    // ---- Good Weekend? ----
+    {
+      // Weekend outlook — find daytime Saturday and Sunday periods
+      const satPeriod = periods.find(p => /^saturday$/i.test(p.name) || /^saturday$/i.test(p.name?.split(" ")[0]));
+      const sunPeriod = periods.find(p => /^sunday$/i.test(p.name)   || /^sunday$/i.test(p.name?.split(" ")[0]));
+      if (satPeriod || sunPeriod) {
+        function rateDay(p) {
+          if (!p) return null;
+          const f    = (p.shortForecast || "").toLowerCase();
+          const t    = p.temperature ?? 60;
+          const pop  = p.probabilityOfPrecipitation?.value ?? 0;
+          const wind = om?.wind_speed_10m ?? 0;
+          const uv   = om?.uv_index ?? 0;
+          let s = 100;
+
+          // ---- Precipitation (0–60 pts) ----
+          if (pop >= 70)      s -= 60;
+          else if (pop >= 50) s -= 45;
+          else if (pop >= 30) s -= 25;
+          else if (pop >= 20) s -= 12;
+          if (f.includes("thunder") || f.includes("storm")) s -= 10;
+          if (f.includes("snow") || f.includes("sleet"))    s -= 10;
+
+          // ---- Temperature comfort (0–25 pts) ----
+          // Ideal range 65–80°F
+          if      (t < 25)  s -= 25;
+          else if (t < 35)  s -= 20;
+          else if (t < 45)  s -= 12;
+          else if (t < 55)  s -= 6;
+          else if (t > 100) s -= 25;
+          else if (t > 92)  s -= 18;
+          else if (t > 85)  s -= 8;
+          else if (t >= 65 && t <= 80) s += 5; // bonus for perfect temps
+
+          // ---- Sky conditions (0–10 pts) ----
+          if (f.includes("overcast"))              s -= 10;
+          else if (f.includes("mostly cloudy"))    s -= 7;
+          else if (f.includes("cloudy"))           s -= 5;
+          else if (f.includes("partly"))           s -= 2;
+          else if (f.includes("sunny") || f.includes("clear")) s += 3;
+
+          // ---- Wind (0–10 pts) ----
+          if (wind > 30)      s -= 10;
+          else if (wind > 20) s -= 6;
+          else if (wind > 12) s -= 3;
+
+          // ---- UV (0–5 pts) ----
+          if (uv > 10) s -= 5;
+          else if (uv > 7) s -= 3;
+
+          return Math.max(0, Math.min(100, s));
+        }
+        const satScore = rateDay(satPeriod);
+        const sunScore = rateDay(sunPeriod);
+        const avg = [satScore, sunScore].filter(s => s != null).reduce((a,b)=>a+b,0)
+          / [satScore, sunScore].filter(s => s != null).length;
+        const label = avg >= 80 ? "Great Weekend! 🎉"
+          : avg >= 60 ? "Pretty Good 👍"
+          : avg >= 40 ? "Mixed Bag 🤷"
+          : "Rough Weekend 😬";
+        const satPop = satPeriod?.probabilityOfPrecipitation?.value;
+        const sunPop = sunPeriod?.probabilityOfPrecipitation?.value;
+        const detail = [
+          satPeriod ? `Sat: ${satScore >= 60 ? "👍" : "👎"} ${satPeriod.shortForecast}${satPop ? ` (${satPop}%)` : ""}` : null,
+          sunPeriod ? `Sun: ${sunScore >= 60 ? "👍" : "👎"} ${sunPeriod.shortForecast}${sunPop ? ` (${sunPop}%)` : ""}` : null,
+        ].filter(Boolean).join(" · ");
+        const color = avg >= 80 ? "#34d399" : avg >= 60 ? "#a3e635" : avg >= 40 ? "#fbbf24" : "#f87171";
+        chip("eWeekend", "Weekend Outlook", label, detail, color);
+        const weekendTip = [
+          satPeriod ? `Saturday: ${satPeriod.shortForecast}${satPop != null ? `, ${satPop}% rain` : ""}, High ${satPeriod.temperature}°F (Score: ${satScore}/100)` : null,
+          sunPeriod ? `Sunday: ${sunPeriod.shortForecast}${sunPop != null ? `, ${sunPop}% rain` : ""}, High ${sunPeriod.temperature}°F (Score: ${sunScore}/100)` : null,
+        ].filter(Boolean).join("\n");
+        chipTooltip("eWeekend", weekendTip);
+      } else {
+        chip("eWeekend", "Weekend Outlook", "—", "Check back later", null);
+      }
+    }
+
+
     box.innerHTML = "";
     const maxP = Math.min(periods.length, 14);
     for (let i = 0; i < maxP; i++) {
@@ -2021,6 +2201,38 @@ async function loadWeather() {
 
       // Assemble
       const sentenceParts = [opening, detail, tempNote].filter(Boolean);
+
+      // Best day of the week
+      const dayScores = dayPeriods.map((p, i) => {
+        const f = (p.shortForecast || "").toLowerCase();
+        const t = p.temperature ?? 60;
+        const pop = p.probabilityOfPrecipitation?.value ?? 0;
+        let sc = 100;
+        if (pop >= 70) sc -= 55; else if (pop >= 50) sc -= 40; else if (pop >= 30) sc -= 22; else if (pop >= 20) sc -= 10;
+        if (f.includes("storm")) sc -= 15; if (f.includes("snow")) sc -= 10;
+        if (f.includes("overcast")) sc -= 8; else if (f.includes("mostly cloudy")) sc -= 5;
+        if (t < 35) sc -= 20; else if (t < 45) sc -= 10; else if (t < 55) sc -= 4;
+        if (t > 92) sc -= 15; else if (t > 85) sc -= 6;
+        else if (t >= 62 && t <= 80) sc += 5;
+        return { name: names[i], score: Math.max(0, Math.min(100, sc)), t, pop, idx: i };
+      });
+      const bestDay  = dayScores.reduce((b, d) => d.score > b.score ? d : b);
+      const worstDay = dayScores.reduce((b, d) => d.score < b.score ? d : b);
+      if (dayScores.length > 1) {
+        if (bestDay.score >= 75 && bestDay.name !== names[0]) {
+          sentenceParts.push(`Best day looks like ${bestDay.name} — ${dayPeriods[bestDay.idx]?.shortForecast || "nice conditions"}`);
+        } else if (worstDay.score < 50 && worstDay.name) {
+          sentenceParts.push(`Watch out for ${worstDay.name} — ${dayPeriods[worstDay.idx]?.shortForecast || "rough conditions"}`);
+        }
+      }
+
+      // Warmest / coolest callout (only if notable)
+      const warmestDay = dayScores.reduce((b, d) => d.t > b.t ? d : b);
+      const coolestDay = dayScores.reduce((b, d) => d.t < b.t ? d : b);
+      if (highT - lowT >= 15) {
+        sentenceParts.push(`Warmest day is ${warmestDay.name} at ${warmestDay.t}°, coolest is ${coolestDay.name} at ${coolestDay.t}°`);
+      }
+
       outlookEl.textContent = sentenceParts.join(". ") + ".";
     }
     const strip = document.getElementById("hourlyStrip");
@@ -2263,16 +2475,56 @@ function loadRSS() {
 // ============================================================
 // LOAD EXTRA INFO: AQI, Pollen, Precip, Snow, Moon, Historical
 // ============================================================
-async function loadExtras() {
-  // ---- helpers ----
-  function chip(id, label, val, sub, color) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML =
-      `<span class="chip-label">${label}</span>` +
-      `<span class="chip-val"${color ? ` style="color:${color}"` : ""}>${val}</span>` +
-      (sub ? `<span class="chip-sub">${sub}</span>` : "");
+
+// chip() is global so loadWeather can also use it
+function chip(id, label, val, sub, color) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML =
+    `<span class="chip-label">${label}</span>` +
+    `<span class="chip-val"${color ? ` style="color:${color}"` : ""}>${val}</span>` +
+    (sub ? `<span class="chip-sub">${sub}</span>` : "");
+}
+
+// Attach a hover/tap tooltip to a chip element
+function chipTooltip(id, text) {
+  const el = document.getElementById(id);
+  if (!el || !text) return;
+  // Reuse existing tooltip or create new one
+  let tip = el._chipTip;
+  if (!tip) {
+    tip = document.createElement("div");
+    tip.className = "fc-tooltip";
+    tip.style.maxWidth = "260px";
+    tip.style.fontSize = "0.74rem";
+    document.body.appendChild(tip);
+    el._chipTip = tip;
+    const show = () => {
+      const r = el.getBoundingClientRect();
+      tip.style.top  = (r.bottom + 10) + "px";
+      tip.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 280)) + "px";
+      tip.classList.add("visible");
+    };
+    const hide = () => tip.classList.remove("visible");
+    el.addEventListener("mouseenter", show);
+    el.addEventListener("mouseleave", hide);
+    el.addEventListener("click", () => tip.classList.contains("visible") ? hide() : show());
+    el.style.cursor = "help";
   }
+  tip.textContent = text;
+}
+
+async function loadExtras() {
+  // Wait up to 3s for _omFull to be populated by loadWeather if running concurrently
+  if (!_omFull) {
+    await new Promise(resolve => {
+      let attempts = 0;
+      const check = setInterval(() => {
+        if (_omFull || ++attempts > 15) { clearInterval(check); resolve(); }
+      }, 200);
+    });
+  }
+  // ---- helpers ----
 
   function aqiLabel(v) {
     if (v == null) return ["—", null];
@@ -2306,10 +2558,13 @@ async function loadExtras() {
   const moon = moonPhase();
   chip("eMoon", "Moon Phase", moon.icon + " " + moon.name, null, null);
 
+  // Start AQI fetch early in parallel while we do sync work below
+  const aqiFetchPromise = fetch(AQI_URL).catch(() => null);
+
   // ---- AQI — AirNow API (nearest station to zip 44663) ----
   try {
-    const aqiRes  = await fetch(AQI_URL);
-    const aqiData = await aqiRes.json();
+    const aqiRes  = await aqiFetchPromise;
+    const aqiData = aqiRes?.ok ? await aqiRes.json() : [];
     // AirNow returns array of pollutant observations — pick highest AQI
     const obs = Array.isArray(aqiData) ? aqiData : [];
     const best = obs.sort((a, b) => (b.AQI ?? 0) - (a.AQI ?? 0))[0];
@@ -2369,11 +2624,9 @@ async function loadExtras() {
     chip("ePollen", "Pollen", level, type, color);
   })();
 
-  // ---- Precip + Snow from Open-Meteo daily ----
+  // ---- Precip + Snow from Open-Meteo daily (reuse cached response) ----
   try {
-    const omRes  = await fetch(OPEN_METEO_URL);
-    const omData = await omRes.json();
-    const daily  = omData.daily;
+    const daily  = _omFull?.daily;
     const todayStr = new Date().toISOString().slice(0, 10);
     const idx = (daily?.time || []).indexOf(todayStr);
 
@@ -2412,7 +2665,7 @@ async function loadExtras() {
       const sign  = diff2 > 0 ? "+" : "";
       const color = diff2 > 5 ? "#f87171" : diff2 < -5 ? "#93c5fd" : "#a3e635";
       chip("eHist", "vs. Normal", `${sign}${diff2}°F`,
-        `Avg high: ${Math.round(normHigh)}°F`, color);
+        `Avg high: ${Math.round(normHigh)}°F for today`, color);
     } else {
       chip("eHist", "vs. Normal", "—", null, null);
     }
@@ -2592,19 +2845,31 @@ function loadOnThisDay() {
   const now   = new Date();
   const m     = now.getMonth() + 1;
   const d     = now.getDate();
-  // Find exact match first, then closest
-  let fact = ON_THIS_DAY.find(f => f.m === m && f.d === d);
+  const labelEl = document.getElementById("otdLabel");
+  const textEl  = document.getElementById("otdText");
+
+  // Find exact match first
+  let fact  = ON_THIS_DAY.find(f => f.m === m && f.d === d);
+  let exact = !!fact;
+
   if (!fact) {
-    // Find nearest by day-of-year distance
-    const doy = n => n.m * 31 + n.d;
-    const today = m * 31 + d;
-    fact = ON_THIS_DAY.reduce((best, f) => {
-      const dist = Math.abs(doy(f) - today);
-      return dist < Math.abs(doy(best) - today) ? f : best;
-    });
+    // Find nearest entry in the same month, or closest overall
+    const sameMonth = ON_THIS_DAY.filter(f => f.m === m);
+    if (sameMonth.length) {
+      fact = sameMonth.reduce((best, f) =>
+        Math.abs(f.d - d) < Math.abs(best.d - d) ? f : best);
+    } else {
+      const doy = n => n.m * 31 + n.d;
+      const today = m * 31 + d;
+      fact = ON_THIS_DAY.reduce((best, f) =>
+        Math.abs(doy(f) - today) < Math.abs(doy(best) - today) ? f : best);
+    }
   }
-  const el = document.getElementById("otdText");
-  if (el && fact) el.textContent = fact.text;
+
+  if (labelEl) labelEl.textContent = exact
+    ? "On This Day in Tuscarawas County"
+    : "This Month in Tuscarawas County History";
+  if (textEl && fact) textEl.textContent = fact.text;
 }
 loadOnThisDay();
 
