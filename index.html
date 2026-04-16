@@ -483,29 +483,60 @@ iframe {
 .uv-top-row { display: flex; align-items: center; gap: 10px; }
 .uv-label-row {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: 0.76rem;
-  color: var(--text-2);
+  flex-direction: column;
+  gap: 2px;
   flex: 1;
 }
-.uv-label-row span:last-child {
-  font-size: 0.82rem;
-  font-weight: 600;
+.uv-title-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.uv-values-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.uv-now-val {
+  font-size: 1.05rem;
+  font-weight: 700;
   color: var(--text-1);
+  line-height: 1;
+}
+.uv-peak-val {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  line-height: 1;
 }
 .uv-bar-track {
   height: 5px;
-  background: rgba(255,255,255,0.08);
+  background: linear-gradient(90deg, #34d399 0%, #a3e635 20%, #fbbf24 40%, #fb923c 60%, #f87171 80%, #c084fc 100%);
   border-radius: 99px;
-  overflow: hidden;
   margin-left: 34px;
+  position: relative;
 }
 .uv-bar-fill {
+  position: absolute;
+  right: 0;
+  top: 0;
   height: 100%;
-  border-radius: 99px;
-  background: linear-gradient(90deg, #34d399, #fbbf24, #f87171, #c084fc);
+  border-radius: 0 99px 99px 0;
+  background: rgba(0,0,0,0.55);
   transition: width 0.6s ease;
+}
+.uv-bar-dot {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+  transition: left 0.6s ease;
+  pointer-events: none;
 }
 
 @keyframes sunrise-ray  { 0%,100% { transform: translateY(0);   opacity:.8; } 50% { transform: translateY(-3px); opacity:1; } }
@@ -1104,12 +1135,16 @@ iframe {
                 </g>
               </svg>
               <div class="uv-label-row">
-                <span id="sUVLabel"></span>
-                <span id="sUVNum"></span>
+                <span class="uv-title-label" id="sUVLabel">UV Index</span>
+                <div class="uv-values-row">
+                  <span class="uv-now-val" id="sUVNum">—</span>
+                  <span class="uv-peak-val" id="sUVPeak"></span>
+                </div>
               </div>
             </div>
             <div class="uv-bar-track">
               <div class="uv-bar-fill" id="sUVBar"></div>
+              <div class="uv-bar-dot" id="sUVDot"></div>
             </div>
           </div>
 
@@ -1831,20 +1866,35 @@ async function loadWeather() {
         return "Extreme";
       }
 
-      // Show live UV as primary; bar reflects live value; daily max shown as context
+      // UV display — current value prominent, today's peak as secondary label
       const uvDisplay = uvNow ?? uvMax;
       const uvBarVal  = uvNow ?? uvMax;
       const uvNumEl   = document.getElementById("sUVNum");
       const uvBarEl   = document.getElementById("sUVBar");
+      const uvLevelColor = uvDisplay == null ? null
+        : uvDisplay <= 2  ? "#34d399"
+        : uvDisplay <= 5  ? "#fbbf24"
+        : uvDisplay <= 7  ? "#fb923c"
+        : uvDisplay <= 10 ? "#f87171"
+        : "#c084fc";
 
-      let labelText = "UV Index  " + uvLabel(uvDisplay);
-      let numText   = uvDisplay != null ? uvDisplay.toFixed(1) : "—";
-      if (uvNow != null && uvMax != null) numText += "  (max " + uvMax.toFixed(1) + ")";
-      else if (uvNow == null && uvMax != null) labelText += "  (day max)";
+      document.getElementById("sUVLabel").textContent = "UV Index  " + uvLabel(uvDisplay);
+      uvNumEl.textContent = uvDisplay != null ? uvDisplay.toFixed(1) : "—";
+      if (uvLevelColor) uvNumEl.style.color = uvLevelColor;
 
-      document.getElementById("sUVLabel").textContent = labelText;
-      uvNumEl.textContent = numText;
-      uvBarEl.style.width = uvBarVal != null ? Math.min(100, (uvBarVal / 11) * 100).toFixed(1) + "%" : "0%";
+      const peakEl = document.getElementById("sUVPeak");
+      if (peakEl) {
+        if (uvNow != null && uvMax != null && uvMax > uvNow) {
+          peakEl.textContent = `Peak ${uvMax.toFixed(1)} today`;
+        } else if (uvNow == null && uvMax != null) {
+          peakEl.textContent = `Today's peak`;
+        } else {
+          peakEl.textContent = "";
+        }
+      }
+      uvBarEl.style.width = uvBarVal != null ? Math.min(100, 100 - (uvBarVal / 11) * 100).toFixed(1) + "%" : "100%";
+      const dotEl = document.getElementById("sUVDot");
+      if (dotEl) dotEl.style.left = uvBarVal != null ? Math.min(100, (uvBarVal / 11) * 100).toFixed(1) + "%" : "0%";
     }
 
     // 7-Day forecast cards
