@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="description" content="Live weather conditions, forecasts, and alerts for Tuscarawas County, Ohio." />
 <meta name="theme-color" content="#0a1628" />
 <meta name="mobile-web-app-capable" content="yes" />
@@ -209,8 +209,9 @@ body::after {
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
-  height: 60px;
-  background: rgba(10,22,40,0.55);
+  padding-top: env(safe-area-inset-top);
+  height: calc(60px + env(safe-area-inset-top));
+  background: rgba(10,22,40,0.85);
   backdrop-filter: blur(30px) saturate(200%);
   -webkit-backdrop-filter: blur(30px) saturate(200%);
   border-bottom: 1px solid var(--glass-border-b);
@@ -230,7 +231,7 @@ body::after {
   font-weight: 400;
 }
 @media (max-width: 600px) {
-  .topbar { padding: 0 16px; height: 52px; }
+  .topbar { padding: 0 16px; padding-top: env(safe-area-inset-top); height: calc(52px + env(safe-area-inset-top)); }
   .topbar-brand span { display: none; }
   .topbar-brand h1 { font-size: 0.95rem; }
   .topbar-cameras-btn { padding: 4px 10px; font-size: 0.68rem; }
@@ -285,16 +286,16 @@ body::after {
   color: #fde68a;
   cursor: pointer;
   position: sticky;
-  top: 60px;
+  top: calc(60px + env(safe-area-inset-top));
   z-index: 98;
   transition: background 0.2s;
 }
-@media (max-width: 600px) { #alertBar { top: 52px; } }
+@media (max-width: 600px) { #alertBar { top: calc(52px + env(safe-area-inset-top)); } }
 #alertBar:hover { background: rgba(245,158,11,0.26); }
 #alertPanel {
   display: none;
   position: fixed;
-  top: 60px;
+  top: calc(60px + env(safe-area-inset-top));
   left: 0;
   right: 0;
   z-index: 97;
