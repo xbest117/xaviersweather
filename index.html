@@ -506,11 +506,11 @@ iframe {
   border-radius: 99px;
   margin-left: 34px;
   position: relative;
+  cursor: pointer;
 }
 .uv-bar-fill {
   position: absolute;
-  right: 0;
-  top: 0;
+  right: 0; top: 0;
   height: 100%;
   border-radius: 0 99px 99px 0;
   background: rgba(0,0,0,0.55);
@@ -519,8 +519,7 @@ iframe {
 .uv-bar-dot {
   position: absolute;
   top: 50%;
-  width: 9px;
-  height: 9px;
+  width: 9px; height: 9px;
   border-radius: 50%;
   background: #fff;
   transform: translate(-50%, -50%);
@@ -528,6 +527,60 @@ iframe {
   transition: left 0.6s ease;
   pointer-events: none;
 }
+.cc-uv-chip { cursor: pointer; }
+.uv-hourly-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.35s ease;
+  opacity: 0;
+  margin-left: 34px;
+}
+.uv-hourly-panel.open {
+  max-height: 120px;
+  opacity: 1;
+}
+.uv-hourly-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 10px 0 4px;
+  scrollbar-width: none;
+}
+.uv-hourly-scroll::-webkit-scrollbar { display: none; }
+.uv-hour-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 36px;
+  flex-shrink: 0;
+}
+.uv-hour-time {
+  font-size: 0.62rem;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.uv-hour-bar-wrap {
+  width: 10px;
+  height: 48px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 99px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.uv-hour-bar {
+  width: 100%;
+  border-radius: 99px;
+  transition: height 0.4s ease;
+}
+.uv-hour-val {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.uv-hour-item.now .uv-hour-time { color: #fbbf24; font-weight: 700; }
+.uv-hour-item.now .uv-hour-val  { color: #fbbf24; }
 
 @keyframes sunrise-ray  { 0%,100% { transform: translateY(0);   opacity:.8; } 50% { transform: translateY(-3px); opacity:1; } }
 @keyframes sunset-ray   { 0%,100% { opacity:.5; } 50% { opacity:1; } }
@@ -1132,9 +1185,15 @@ iframe {
                 </div>
               </div>
             </div>
+            <!-- UV bar -->
             <div class="uv-bar-track">
               <div class="uv-bar-fill" id="sUVBar"></div>
               <div class="uv-bar-dot" id="sUVDot"></div>
+            </div>
+
+            <!-- Expandable hourly UV panel -->
+            <div class="uv-hourly-panel" id="uvHourlyPanel">
+              <div class="uv-hourly-scroll" id="uvHourlyScroll"></div>
             </div>
           </div>
 
@@ -1289,6 +1348,7 @@ const FORECAST_HOURLY_URL = "https://api.weather.gov/gridpoints/PBZ/28,62/foreca
 const OPEN_METEO_URL      = "https://api.open-meteo.com/v1/forecast?latitude=40.4756&longitude=-81.4467" +
   "&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m" +
   ",wind_gusts_10m,dew_point_2m,surface_pressure,visibility,weather_code,is_day,uv_index" +
+  "&hourly=uv_index" +
   "&daily=sunrise,sunset,uv_index_max,precipitation_sum,snowfall_sum,precipitation_hours" +
   "&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FNew_York";
 
@@ -1858,9 +1918,7 @@ async function loadWeather() {
 
       // UV display — current value prominent, today's peak as secondary label
       const uvDisplay = uvNow ?? uvMax;
-      const uvBarVal  = uvNow ?? uvMax;
       const uvNumEl   = document.getElementById("sUVNum");
-      const uvBarEl   = document.getElementById("sUVBar");
       const uvLevelColor = uvDisplay == null ? null
         : uvDisplay <= 2  ? "#34d399"
         : uvDisplay <= 5  ? "#fbbf24"
@@ -1882,9 +1940,51 @@ async function loadWeather() {
           peakEl.textContent = "";
         }
       }
-      uvBarEl.style.width = uvBarVal != null ? Math.min(100, 100 - (uvBarVal / 11) * 100).toFixed(1) + "%" : "100%";
-      const dotEl = document.getElementById("sUVDot");
-      if (dotEl) dotEl.style.left = uvBarVal != null ? Math.min(100, (uvBarVal / 11) * 100).toFixed(1) + "%" : "0%";
+
+      // Restore bar
+      const uvBarEl = document.getElementById("sUVBar");
+      const uvBarVal = uvNow ?? uvMax;
+      if (uvBarEl) uvBarEl.style.width = uvBarVal != null ? Math.min(100, 100 - (uvBarVal / 11) * 100).toFixed(1) + "%" : "100%";
+      const uvDotEl = document.getElementById("sUVDot");
+      if (uvDotEl) uvDotEl.style.left = uvBarVal != null ? Math.min(100, (uvBarVal / 11) * 100).toFixed(1) + "%" : "0%";
+
+      // Build hourly UV panel
+      const hourlyUV   = omFull?.hourly?.uv_index || [];
+      const hourlyTime = omFull?.hourly?.time || [];
+      const uvTodayStr = new Date().toISOString().slice(0, 10);
+      const nowHour    = new Date().getHours();
+      const todayUVs   = hourlyTime
+        .map((t, i) => ({ t, uv: hourlyUV[i] ?? 0, hour: parseInt(t.slice(11, 13)) }))
+        .filter(h => h.t.startsWith(uvTodayStr));
+
+      const scroll = document.getElementById("uvHourlyScroll");
+      if (scroll && todayUVs.length) {
+        const maxUV = Math.max(...todayUVs.map(h => h.uv), 1);
+        scroll.innerHTML = todayUVs.map(h => {
+          const pct   = (h.uv / maxUV) * 100;
+          const color = h.uv <= 2  ? "#34d399"
+            : h.uv <= 5  ? "#fbbf24"
+            : h.uv <= 7  ? "#fb923c"
+            : h.uv <= 10 ? "#f87171"
+            : "#c084fc";
+          const ampm  = h.hour === 0 ? "12am" : h.hour < 12 ? `${h.hour}am` : h.hour === 12 ? "12pm" : `${h.hour-12}pm`;
+          const isNow = h.hour === nowHour;
+          return `<div class="uv-hour-item${isNow ? " now" : ""}"><span class="uv-hour-time">${ampm}</span><div class="uv-hour-bar-wrap"><div class="uv-hour-bar" style="height:${pct.toFixed(0)}%;background:${color}"></div></div><span class="uv-hour-val">${h.uv.toFixed(1)}</span></div>`;
+        }).join("");
+        // Scroll to current hour
+        setTimeout(() => {
+          const nowItem = scroll.querySelector(".now");
+          if (nowItem) nowItem.scrollIntoView({ inline: "center", behavior: "smooth" });
+        }, 100);
+      }
+
+      // Toggle panel on chip click
+      const uvChip  = document.getElementById("sUV");
+      const uvPanel = document.getElementById("uvHourlyPanel");
+      if (uvChip && uvPanel && !uvChip._uvToggleSet) {
+        uvChip._uvToggleSet = true;
+        uvChip.addEventListener("click", () => uvPanel.classList.toggle("open"));
+      }
     }
 
     // 7-Day forecast cards
@@ -2530,7 +2630,6 @@ function chip(id, label, val, sub, color) {
 function chipTooltip(id, text) {
   const el = document.getElementById(id);
   if (!el || !text) return;
-  // Reuse existing tooltip or create new one
   let tip = el._chipTip;
   if (!tip) {
     tip = document.createElement("div");
@@ -2539,6 +2638,7 @@ function chipTooltip(id, text) {
     tip.style.fontSize = "0.74rem";
     document.body.appendChild(tip);
     el._chipTip = tip;
+
     const show = () => {
       const r = el.getBoundingClientRect();
       tip.style.top  = (r.bottom + 10) + "px";
@@ -2546,9 +2646,22 @@ function chipTooltip(id, text) {
       tip.classList.add("visible");
     };
     const hide = () => tip.classList.remove("visible");
+
+    // Desktop: hover
     el.addEventListener("mouseenter", show);
     el.addEventListener("mouseleave", hide);
-    el.addEventListener("click", () => tip.classList.contains("visible") ? hide() : show());
+
+    // Mobile: tap to toggle — use touchend to avoid the mouseenter/click race
+    el.addEventListener("touchend", (e) => {
+      e.preventDefault(); // prevent ghost mouse events
+      tip.classList.contains("visible") ? hide() : show();
+    });
+
+    // Close when tapping elsewhere
+    document.addEventListener("touchstart", (e) => {
+      if (!el.contains(e.target) && !tip.contains(e.target)) hide();
+    }, { passive: true });
+
     el.style.cursor = "help";
   }
   tip.textContent = text;
