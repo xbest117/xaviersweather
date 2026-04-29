@@ -434,11 +434,14 @@ iframe {
   transition: background 0.2s;
 }
 .cc-metric:hover { background: rgba(255,255,255,0.10); }
-.cc-metric.full {
-  grid-column: 1 / -1;
-  font-size: 0.70rem;
+.cc-obs-time {
+  font-size: 0.6rem;
+  font-weight: 400;
   color: var(--text-3);
-  white-space: pre-line;
+  letter-spacing: 0.02em;
+  margin-left: 8px;
+  opacity: 0.8;
+  text-transform: none;
 }
 .stale-warn { color: #fbbf24; font-weight: 600; }
 
@@ -1177,6 +1180,7 @@ iframe {
         <div class="cc-hero">
           <div class="cc-location">
             <span id="hNow">Loading…</span>
+            <span id="mTimes" class="cc-obs-time"></span>
           </div>
           <div class="cc-main">
             <div class="cc-icon-wrap wx-icon wx-icon-big" id="iconNow"></div>
@@ -1196,7 +1200,6 @@ iframe {
           <div class="cc-metric" id="mDew"      aria-label="Dewpoint"></div>
           <div class="cc-metric" id="mBaro"     aria-label="Barometer"></div>
           <div class="cc-metric" id="mVis"      aria-label="Visibility"></div>
-          <div class="cc-metric full" id="mTimes" aria-label="Observation time"></div>
         </div>
 
         <!-- Sun & UV chip -->
@@ -1441,7 +1444,7 @@ const FORECAST_HOURLY_URL = "https://api.weather.gov/gridpoints/PBZ/28,62/foreca
 const OPEN_METEO_URL      = "https://api.open-meteo.com/v1/forecast?latitude=40.4756&longitude=-81.4467" +
   "&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m" +
   ",wind_gusts_10m,dew_point_2m,surface_pressure,visibility,weather_code,is_day,uv_index" +
-  "&hourly=uv_index" +
+  "&hourly=uv_index,precipitation" +
   "&daily=sunrise,sunset,uv_index_max,precipitation_sum,snowfall_sum,precipitation_hours" +
   "&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch&timezone=America%2FNew_York";
 
@@ -1962,21 +1965,24 @@ async function loadWeather() {
 
     // Times chip
     const timesEl = document.getElementById("mTimes");
-    const now = new Date();
-    if (obsStale) {
-      const source = om ? "📡 KPHD offline — backup data from Open-Meteo" : "📡 KPHD offline — showing forecast data";
-      timesEl.innerHTML = `Updated: ${formatTime(now)}&nbsp;&nbsp;<span class="stale-warn">${source}</span>`;
-    } else {
-      let t = "Updated: " + formatTime(now);
-      if (obs?.timestamp) {
-        const obsTime = new Date(obs.timestamp);
-        t += "\nObservation: " + formatTime(obsTime);
-        if (obsAgeMins != null)
-          t += obsAgeMins < 60 ? ` (${obsAgeMins}m ago)` : ` (${Math.floor(obsAgeMins/60)}h ${obsAgeMins%60}m ago)`;
+    if (timesEl) {
+      if (obsStale) {
+        timesEl.textContent = om ? "⚠ Using backup data (KPHD offline)" : "⚠ KPHD offline";
+        timesEl.style.color = "#fbbf24";
+      } else {
+        let t = "Updated " + formatTime(new Date());
+        if (obs?.timestamp) {
+          const ageTxt = obsAgeMins != null
+            ? obsAgeMins < 60
+              ? ` · observation ${obsAgeMins}m ago`
+              : ` · observation ${Math.floor(obsAgeMins/60)}h ${obsAgeMins % 60}m ago`
+            : "";
+          t += ageTxt;
+        }
+        timesEl.textContent = t;
+        timesEl.style.color = "";
       }
-      timesEl.textContent = t;
     }
-
     // Sun & UV — reuse already-fetched Open-Meteo data
     {
       let sunrise = srToday, sunset = ssToday, uvNow = null, uvMax = null;
@@ -2307,7 +2313,10 @@ async function loadWeather() {
         card.addEventListener("blur", hide);
         card.addEventListener("touchend", (e) => {
           e.preventDefault();
-          tooltip.classList.contains("visible") ? hide() : show();
+          const isOpen = tooltip.classList.contains("visible");
+          // Close all open tooltips first
+          document.querySelectorAll(".fc-tooltip.visible").forEach(t => t.classList.remove("visible"));
+          if (!isOpen) show();
         });
       }
 
@@ -2894,13 +2903,26 @@ async function loadExtras() {
     const todayStr = new Date().toISOString().slice(0, 10);
     const idx = (daily?.time || []).indexOf(todayStr);
 
-    const precip = idx !== -1 ? (daily.precipitation_sum?.[idx] ?? null) : null;
-    const snow   = idx !== -1 ? (daily.snowfall_sum?.[idx]      ?? null) : null;
-    const hrs    = idx !== -1 ? (daily.precipitation_hours?.[idx] ?? null) : null;
+    const snow = idx !== -1 ? (daily?.snowfall_sum?.[idx] ?? null) : null;
 
-    chip("ePrecip", "Precip Today",
-      precip != null ? precip.toFixed(2) + '"' : "—",
-      hrs != null && hrs > 0 ? `${hrs}h of rain` : "Dry today", null);
+    // Rolling 24hr windows using hourly precipitation
+    const hourlyTime   = _omFull?.hourly?.time || [];
+    const hourlyPrecip = _omFull?.hourly?.precipitation || [];
+    const nowHour = new Date();
+    nowHour.setMinutes(0, 0, 0);
+
+    let last24 = 0, next24 = 0;
+    hourlyTime.forEach((t, i) => {
+      // Open-Meteo returns local time strings like "2024-04-28T20:00"
+      const hourDate   = new Date(t.replace("T", " ")); // parse as local time
+      const hourOffset = (hourDate - nowHour) / 3600000;
+      if (hourOffset >= -24 && hourOffset < 0)  last24 += hourlyPrecip[i] ?? 0;
+      if (hourOffset >= 0  && hourOffset < 24)  next24 += hourlyPrecip[i] ?? 0;
+    });
+
+    const precipVal = last24.toFixed(2) + '" last 24h';
+    const precipSub = next24.toFixed(2) + '" expected next 24h';
+    chip("ePrecip", "Precipitation", precipVal, precipSub, last24 > 0 || next24 > 0 ? "#93c5fd" : null);
 
     chip("eSnow", "Snowfall Today",
       snow != null && snow > 0 ? snow.toFixed(1) + '"' : "None",
