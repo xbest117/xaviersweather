@@ -532,28 +532,36 @@ iframe {
   display: none;
   position: fixed;
   left: 0; right: 0;
-  background: rgba(10,22,40,0.97);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(8,18,32,0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-top: 1px solid var(--glass-border);
   border-bottom: 1px solid var(--glass-border);
-  padding: 10px 20px 12px;
+  padding: 12px 20px 16px;
   z-index: 200;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
 .uv-hourly-panel.open {
   display: block;
-  animation: uv-panel-in 0.22s ease;
+  animation: uv-panel-in 0.2s ease;
 }
 @keyframes uv-panel-in {
-  from { opacity: 0; transform: translateY(-6px); }
+  from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+.uv-panel-header {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 10px;
 }
 .uv-hourly-scroll {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  padding: 10px 0 4px;
+  padding-bottom: 2px;
   scrollbar-width: none;
 }
 .uv-hourly-scroll::-webkit-scrollbar { display: none; }
@@ -561,18 +569,22 @@ iframe {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  min-width: 36px;
+  gap: 5px;
+  min-width: 54px;
   flex-shrink: 0;
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-b);
+  border-radius: 10px;
+  padding: 8px 4px 10px;
 }
 .uv-hour-time {
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   color: var(--text-3);
   white-space: nowrap;
 }
 .uv-hour-bar-wrap {
-  width: 10px;
-  height: 48px;
+  width: 8px;
+  height: 36px;
   background: rgba(255,255,255,0.07);
   border-radius: 99px;
   display: flex;
@@ -582,12 +594,21 @@ iframe {
 .uv-hour-bar {
   width: 100%;
   border-radius: 99px;
-  transition: height 0.4s ease;
 }
 .uv-hour-val {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  color: var(--text-2);
+  color: var(--text-1);
+}
+.uv-hour-lbl {
+  font-size: 0.56rem;
+  color: var(--text-3);
+  text-align: center;
+  line-height: 1.2;
+}
+.uv-hour-item.now {
+  border-color: rgba(251,191,36,0.5);
+  background: rgba(251,191,36,0.08);
 }
 .uv-hour-item.now .uv-hour-time { color: #fbbf24; font-weight: 700; }
 .uv-hour-item.now .uv-hour-val  { color: #fbbf24; }
@@ -1258,6 +1279,7 @@ iframe {
 
       <!-- Expandable hourly UV panel — inside glass but uses cc-sun-row overflow -->
       <div class="uv-hourly-panel" id="uvHourlyPanel">
+        <div class="uv-panel-header">UV Index — Today's Hours</div>
         <div class="uv-hourly-scroll" id="uvHourlyScroll"></div>
       </div>
 
@@ -2010,28 +2032,34 @@ async function loadWeather() {
 
       const scroll = document.getElementById("uvHourlyScroll");
       if (scroll && todayUVs.length) {
-        const maxUV = Math.max(...todayUVs.map(h => h.uv), 1);
-        scroll.innerHTML = todayUVs.map(h => {
-          const pct   = (h.uv / maxUV) * 100;
-          const color = h.uv <= 2  ? "#34d399"
-            : h.uv <= 5  ? "#fbbf24"
-            : h.uv <= 7  ? "#fb923c"
-            : h.uv <= 10 ? "#f87171"
-            : "#c084fc";
-          const ampm  = h.hour === 0 ? "12am" : h.hour < 12 ? `${h.hour}am` : h.hour === 12 ? "12pm" : `${h.hour-12}pm`;
-          const isNow = h.hour === nowHour;
-          return `<div class="uv-hour-item${isNow ? " now" : ""}"><span class="uv-hour-time">${ampm}</span><div class="uv-hour-bar-wrap"><div class="uv-hour-bar" style="height:${pct.toFixed(0)}%;background:${color}"></div></div><span class="uv-hour-val">${h.uv.toFixed(1)}</span></div>`;
-        }).join("");
-        // Scroll container to center the current hour without affecting page scroll
-        setTimeout(() => {
-          const nowItem = scroll.querySelector(".now");
-          if (nowItem) {
-            const itemLeft   = nowItem.offsetLeft;
-            const itemWidth  = nowItem.offsetWidth;
-            const scrollWidth = scroll.offsetWidth;
-            scroll.scrollLeft = itemLeft - (scrollWidth / 2) + (itemWidth / 2);
-          }
-        }, 100);
+        const uvHours = todayUVs.filter(h => h.uv > 0);
+        if (!uvHours.length) {
+          scroll.innerHTML = `<div style="font-size:0.8rem;color:var(--text-3);padding:8px 0">No UV exposure expected today.</div>`;
+        } else {
+          const maxUV = Math.max(...uvHours.map(h => h.uv), 1);
+          scroll.innerHTML = uvHours.map(h => {
+            const pct   = (h.uv / maxUV) * 100;
+            const color = h.uv <= 2  ? "#34d399"
+              : h.uv <= 5  ? "#fbbf24"
+              : h.uv <= 7  ? "#fb923c"
+              : h.uv <= 10 ? "#f87171"
+              : "#c084fc";
+            const ampm  = h.hour === 0 ? "12am" : h.hour < 12 ? `${h.hour}am` : h.hour === 12 ? "12pm" : `${h.hour-12}pm`;
+            const lbl   = h.uv <= 2 ? "Low" : h.uv <= 5 ? "Mod" : h.uv <= 7 ? "High" : h.uv <= 10 ? "V.Hi" : "Ext";
+            const isNow = h.hour === nowHour;
+            return `<div class="uv-hour-item${isNow ? " now" : ""}"><span class="uv-hour-time">${ampm}</span><div class="uv-hour-bar-wrap"><div class="uv-hour-bar" style="height:${pct.toFixed(0)}%;background:${color}"></div></div><span class="uv-hour-val" style="color:${color}">${h.uv.toFixed(1)}</span><span class="uv-hour-lbl">${lbl}</span></div>`;
+          }).join("");
+          // Scroll container to center the current hour without affecting page scroll
+          setTimeout(() => {
+            const nowItem = scroll.querySelector(".now");
+            if (nowItem) {
+              const itemLeft   = nowItem.offsetLeft;
+              const itemWidth  = nowItem.offsetWidth;
+              const scrollWidth = scroll.offsetWidth;
+              scroll.scrollLeft = itemLeft - (scrollWidth / 2) + (itemWidth / 2);
+            }
+          }, 100);
+        }
       }
 
       // Toggle panel on chip click — position below chip
