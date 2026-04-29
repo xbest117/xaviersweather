@@ -395,7 +395,7 @@ iframe {
 }
 .cc-icon-wrap { width: 90px; height: 90px; flex-shrink: 0; }
 .cc-temp {
-  font-size: 6rem;
+  font-size: clamp(3.8rem, 15vw, 6rem);
   font-weight: 200;
   line-height: 1;
   letter-spacing: -0.05em;
@@ -480,7 +480,7 @@ iframe {
   font-weight: 600;
   color: var(--text-1);
 }
-.cc-uv-chip { flex-direction: column; align-items: stretch; gap: 6px; padding: 10px 14px; }
+.cc-uv-chip { flex-direction: column; align-items: stretch; gap: 6px; padding: 10px 14px; overflow: visible; }
 .uv-top-row { display: flex; align-items: center; gap: 10px; }
 .uv-label-row { display: flex; flex-direction: column; }
 .uv-title-label {
@@ -529,15 +529,25 @@ iframe {
 }
 .cc-uv-chip { cursor: pointer; }
 .uv-hourly-panel {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease, opacity 0.35s ease;
-  opacity: 0;
-  margin-left: 34px;
+  display: none;
+  position: fixed;
+  left: 0; right: 0;
+  background: rgba(10,22,40,0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 10px 20px 12px;
+  z-index: 200;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 .uv-hourly-panel.open {
-  max-height: 120px;
-  opacity: 1;
+  display: block;
+  animation: uv-panel-in 0.22s ease;
+}
+@keyframes uv-panel-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .uv-hourly-scroll {
   display: flex;
@@ -752,9 +762,13 @@ iframe {
 .fc-tooltip::before {
   content: "";
   position: absolute;
-  bottom: 100%; left: 20px;
+  top: -12px;
   border: 6px solid transparent;
   border-bottom-color: rgba(10,22,40,0.92);
+  left: var(--arrow-left, 20px);
+}
+@media (max-width: 600px) {
+  .fc-tooltip::before { display: none; }
 }
 .fc-tooltip.visible { display: block; }
 
@@ -1048,6 +1062,54 @@ iframe {
 @media (max-width: 500px) {
   .forecast-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ---- iPhone SE and small phones (≤ 390px) ---- */
+@media (max-width: 390px) {
+  /* Temperature — scale down from 6rem */
+  .cc-temp { font-size: 4.2rem; }
+
+  /* Hero section tighter padding */
+  .cc-hero { padding: 12px 16px 8px; }
+
+  /* Metrics chips — tighter text */
+  .cc-metrics { padding: 10px 16px; gap: 6px; }
+  .cc-metrics-chip { font-size: 0.68rem; padding: 6px 8px; }
+
+  /* Sun row — stack UV chip below */
+  .cc-sun-row { grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px 16px; }
+  .cc-uv-chip { grid-column: 1 / -1; }
+
+  /* Extra chips — single column on very small screens */
+  .cc-extra-row { grid-template-columns: 1fr 1fr; gap: 6px; padding: 0 16px 16px; }
+  .cc-extra-chip { padding: 8px 10px; }
+  .chip-val { font-size: 0.82rem; }
+  .chip-sub { font-size: 0.62rem; }
+
+  /* Hourly strip — smaller cards */
+  .hourly-card { min-width: 52px; padding: 8px 6px; }
+
+  /* 7-day bars — smaller labels */
+  .temp-range-row { font-size: 0.66rem; }
+
+  /* Forecast grid — 2 cols already, just tighten */
+  .forecast-card { padding: 10px 8px; font-size: 0.72rem; }
+
+  /* Page padding */
+  .page-body { padding: 10px 12px; gap: 14px; }
+
+  /* Detail forecast text */
+  .cc-detail { font-size: 0.74rem; }
+
+  /* Sun chip text */
+  .sun-chip-value { font-size: 0.76rem; }
+  .sun-chip-label { font-size: 0.58rem; }
+
+  /* Alert bar text */
+  #alertBar { font-size: 0.76rem; padding: 6px 12px; }
+
+  /* RSS / latest updates */
+  .rss-item { padding: 10px 14px; font-size: 0.76rem; }
+}
 </style>
 </head>
 <body>
@@ -1081,7 +1143,7 @@ iframe {
     <div class="hero-row">
 
       <!-- Current Conditions -->
-      <div class="glass" style="overflow:hidden;">
+      <div class="glass">
         <div class="cc-hero">
           <div class="cc-location">
             <span id="hNow">Loading…</span>
@@ -1190,14 +1252,14 @@ iframe {
               <div class="uv-bar-fill" id="sUVBar"></div>
               <div class="uv-bar-dot" id="sUVDot"></div>
             </div>
-
-            <!-- Expandable hourly UV panel -->
-            <div class="uv-hourly-panel" id="uvHourlyPanel">
-              <div class="uv-hourly-scroll" id="uvHourlyScroll"></div>
-            </div>
           </div>
 
-        </div>
+        </div><!-- end cc-sun-row -->
+
+      <!-- Expandable hourly UV panel — inside glass but uses cc-sun-row overflow -->
+      <div class="uv-hourly-panel" id="uvHourlyPanel">
+        <div class="uv-hourly-scroll" id="uvHourlyScroll"></div>
+      </div>
 
         <!-- Extra info chips: AQI, Pollen, Precip, Snow, Moon, Historical, Feels Trend, Outdoor, Weekend -->
         <div class="cc-extra-row" id="extraRow">
@@ -1727,17 +1789,14 @@ async function loadWeather() {
     // Station is considered offline if obs is missing or older than 90 minutes
     const obsStale = obs == null || (obsAgeMins != null && obsAgeMins > 90);
 
-    // If station is offline, fetch Open-Meteo as fallback
-    let om = null;
-    let omFull = null;
+    // Open-Meteo — always fetch for current conditions, UV, sun data, chips
     try {
       const omRes = await fetch(OPEN_METEO_URL);
       if (omRes.ok) {
-        omFull = await omRes.json();
-        _omFull = omFull; // share for loadExtras
-        om = omFull.current || null;
+        _omFull = await omRes.json();
       }
     } catch (e) { console.warn("Open-Meteo fetch failed:", e); }
+    const om = _omFull?.current || null;
 
     // Parse hourly data up front so fallback can use it
     let hourlyPeriods = [];
@@ -1777,18 +1836,18 @@ async function loadWeather() {
     document.getElementById("shortNow").textContent  = skyCondition;
     document.getElementById("detailNow").textContent = cur.detailedForecast || "";
 
-    // Icon & theme — obs → Open-Meteo → hourly → daily
-    const _now = new Date();
-    const _todayStr = _now.toISOString().slice(0, 10);
-    const _daily = omFull?.daily;
-    const _didx  = (_daily?.time || []).indexOf(_todayStr);
-    const _sr = _didx !== -1 && _daily?.sunrise?.[_didx] ? new Date(_daily.sunrise[_didx]) : null;
-    const _ss = _didx !== -1 && _daily?.sunset?.[_didx]  ? new Date(_daily.sunset[_didx])  : null;
-    const isNightNow = _sr && _ss
-      ? (_now < _sr || _now > _ss)
+    // Night detection — use actual sunrise/sunset from Open-Meteo as primary source
+    const nowDate   = new Date();
+    const todayStr  = nowDate.toISOString().slice(0, 10);
+    const omDaily   = _omFull?.daily;
+    const omDayIdx  = (omDaily?.time || []).indexOf(todayStr);
+    const srToday   = omDayIdx !== -1 && omDaily?.sunrise?.[omDayIdx] ? new Date(omDaily.sunrise[omDayIdx]) : null;
+    const ssToday   = omDayIdx !== -1 && omDaily?.sunset?.[omDayIdx]  ? new Date(omDaily.sunset[omDayIdx])  : null;
+    const isNightNow = srToday && ssToday
+      ? (nowDate < srToday || nowDate > ssToday)
       : om?.is_day != null ? !om.is_day
-      : hourlyNow ? !hourlyNow.isDaytime
-      : (_now.getHours() >= 20 || _now.getHours() < 6);
+      : hourlyNow  ? !hourlyNow.isDaytime
+      : (nowDate.getHours() >= 20 || nowDate.getHours() < 6);
     const iconType = (!obsStale ? iconTypeFromObs(obs, isNightNow) : null)
       || (om ? resolveIcon(omCondText, isNightNow) : null)
       || resolveIcon(hourlyNow?.shortForecast || cur.shortForecast, isNightNow);
@@ -1889,16 +1948,9 @@ async function loadWeather() {
 
     // Sun & UV — reuse already-fetched Open-Meteo data
     {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      let sunrise = null, sunset = null, uvNow = null, uvMax = null;
+      let sunrise = srToday, sunset = ssToday, uvNow = null, uvMax = null;
       try {
-        const daily = omFull?.daily;
-        const idx   = (daily?.time || []).indexOf(todayStr);
-        if (idx !== -1) {
-          sunrise = daily.sunrise?.[idx] ? new Date(daily.sunrise[idx]) : null;
-          sunset  = daily.sunset?.[idx]  ? new Date(daily.sunset[idx])  : null;
-          uvMax   = daily.uv_index_max?.[idx] ?? null;
-        }
+        uvMax = omDayIdx !== -1 && omDaily ? (omDaily.uv_index_max?.[omDayIdx] ?? null) : null;
         uvNow = om?.uv_index ?? null;
       } catch (e) { console.warn("Sun/UV error:", e); }
 
@@ -1941,21 +1993,20 @@ async function loadWeather() {
         }
       }
 
-      // Restore bar
-      const uvBarEl = document.getElementById("sUVBar");
-      const uvBarVal = uvNow ?? uvMax;
-      if (uvBarEl) uvBarEl.style.width = uvBarVal != null ? Math.min(100, 100 - (uvBarVal / 11) * 100).toFixed(1) + "%" : "100%";
-      const uvDotEl = document.getElementById("sUVDot");
-      if (uvDotEl) uvDotEl.style.left = uvBarVal != null ? Math.min(100, (uvBarVal / 11) * 100).toFixed(1) + "%" : "0%";
+      // Update bar and dot position
+      const uvVal    = uvNow ?? uvMax;
+      const uvBarEl  = document.getElementById("sUVBar");
+      const uvDotEl  = document.getElementById("sUVDot");
+      if (uvBarEl) uvBarEl.style.width  = uvVal != null ? (100 - Math.min(100, (uvVal / 11) * 100)).toFixed(1) + "%" : "100%";
+      if (uvDotEl) uvDotEl.style.left   = uvVal != null ? Math.min(100, (uvVal / 11) * 100).toFixed(1) + "%" : "0%";
 
       // Build hourly UV panel
-      const hourlyUV   = omFull?.hourly?.uv_index || [];
-      const hourlyTime = omFull?.hourly?.time || [];
-      const uvTodayStr = new Date().toISOString().slice(0, 10);
-      const nowHour    = new Date().getHours();
+      const hourlyUV   = _omFull?.hourly?.uv_index || [];
+      const hourlyTime = _omFull?.hourly?.time || [];
+      const nowHour    = nowDate.getHours();
       const todayUVs   = hourlyTime
         .map((t, i) => ({ t, uv: hourlyUV[i] ?? 0, hour: parseInt(t.slice(11, 13)) }))
-        .filter(h => h.t.startsWith(uvTodayStr));
+        .filter(h => h.t.startsWith(todayStr));
 
       const scroll = document.getElementById("uvHourlyScroll");
       if (scroll && todayUVs.length) {
@@ -1971,19 +2022,51 @@ async function loadWeather() {
           const isNow = h.hour === nowHour;
           return `<div class="uv-hour-item${isNow ? " now" : ""}"><span class="uv-hour-time">${ampm}</span><div class="uv-hour-bar-wrap"><div class="uv-hour-bar" style="height:${pct.toFixed(0)}%;background:${color}"></div></div><span class="uv-hour-val">${h.uv.toFixed(1)}</span></div>`;
         }).join("");
-        // Scroll to current hour
+        // Scroll container to center the current hour without affecting page scroll
         setTimeout(() => {
           const nowItem = scroll.querySelector(".now");
-          if (nowItem) nowItem.scrollIntoView({ inline: "center", behavior: "smooth" });
+          if (nowItem) {
+            const itemLeft   = nowItem.offsetLeft;
+            const itemWidth  = nowItem.offsetWidth;
+            const scrollWidth = scroll.offsetWidth;
+            scroll.scrollLeft = itemLeft - (scrollWidth / 2) + (itemWidth / 2);
+          }
         }, 100);
       }
 
-      // Toggle panel on chip click
+      // Toggle panel on chip click — position below chip
       const uvChip  = document.getElementById("sUV");
       const uvPanel = document.getElementById("uvHourlyPanel");
       if (uvChip && uvPanel && !uvChip._uvToggleSet) {
         uvChip._uvToggleSet = true;
-        uvChip.addEventListener("click", () => uvPanel.classList.toggle("open"));
+        uvChip.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (uvPanel.classList.contains("open")) {
+            uvPanel.classList.remove("open");
+          } else {
+            const r = uvChip.getBoundingClientRect();
+            uvPanel.style.top = (r.bottom + 2) + "px";
+            uvPanel.classList.add("open");
+          }
+        });
+        uvChip.addEventListener("touchend", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (uvPanel.classList.contains("open")) {
+            uvPanel.classList.remove("open");
+          } else {
+            const r = uvChip.getBoundingClientRect();
+            uvPanel.style.top = (r.bottom + 2) + "px";
+            uvPanel.classList.add("open");
+          }
+        });
+        document.addEventListener("click", (e) => {
+          if (!uvChip.contains(e.target) && !uvPanel.contains(e.target)) {
+            uvPanel.classList.remove("open");
+          }
+        });
+        // Also close on scroll
+        window.addEventListener("scroll", () => uvPanel.classList.remove("open"), { passive: true });
       }
     }
 
@@ -2090,58 +2173,38 @@ async function loadWeather() {
       }
     }
 
+    // Rate a forecast period for outdoor quality (used by Weekend Outlook)
+    function rateDay(p) {
+      if (!p) return null;
+      const f    = (p.shortForecast || "").toLowerCase();
+      const t    = p.temperature ?? 60;
+      const pop  = p.probabilityOfPrecipitation?.value ?? 0;
+      const wind = om?.wind_speed_10m ?? 0;
+      const uv   = om?.uv_index ?? 0;
+      let s = 100;
+      if (pop >= 70)      s -= 60; else if (pop >= 50) s -= 45;
+      else if (pop >= 30) s -= 25; else if (pop >= 20) s -= 12;
+      if (f.includes("thunder") || f.includes("storm")) s -= 10;
+      if (f.includes("snow") || f.includes("sleet"))    s -= 10;
+      if      (t < 25)  s -= 25; else if (t < 35)  s -= 20;
+      else if (t < 45)  s -= 12; else if (t < 55)  s -= 6;
+      else if (t > 100) s -= 25; else if (t > 92)  s -= 18;
+      else if (t > 85)  s -= 8;  else if (t >= 65 && t <= 80) s += 5;
+      if (f.includes("overcast"))           s -= 10;
+      else if (f.includes("mostly cloudy")) s -= 7;
+      else if (f.includes("cloudy"))        s -= 5;
+      else if (f.includes("partly"))        s -= 2;
+      else if (f.includes("sunny") || f.includes("clear")) s += 3;
+      if (wind > 30) s -= 10; else if (wind > 20) s -= 6; else if (wind > 12) s -= 3;
+      if (uv > 10)   s -= 5;  else if (uv > 7)    s -= 3;
+      return Math.max(0, Math.min(100, s));
+    }
+
     // ---- Good Weekend? ----
     {
-      // Weekend outlook — find daytime Saturday and Sunday periods
       const satPeriod = periods.find(p => /^saturday$/i.test(p.name) || /^saturday$/i.test(p.name?.split(" ")[0]));
       const sunPeriod = periods.find(p => /^sunday$/i.test(p.name)   || /^sunday$/i.test(p.name?.split(" ")[0]));
       if (satPeriod || sunPeriod) {
-        function rateDay(p) {
-          if (!p) return null;
-          const f    = (p.shortForecast || "").toLowerCase();
-          const t    = p.temperature ?? 60;
-          const pop  = p.probabilityOfPrecipitation?.value ?? 0;
-          const wind = om?.wind_speed_10m ?? 0;
-          const uv   = om?.uv_index ?? 0;
-          let s = 100;
-
-          // ---- Precipitation (0–60 pts) ----
-          if (pop >= 70)      s -= 60;
-          else if (pop >= 50) s -= 45;
-          else if (pop >= 30) s -= 25;
-          else if (pop >= 20) s -= 12;
-          if (f.includes("thunder") || f.includes("storm")) s -= 10;
-          if (f.includes("snow") || f.includes("sleet"))    s -= 10;
-
-          // ---- Temperature comfort (0–25 pts) ----
-          // Ideal range 65–80°F
-          if      (t < 25)  s -= 25;
-          else if (t < 35)  s -= 20;
-          else if (t < 45)  s -= 12;
-          else if (t < 55)  s -= 6;
-          else if (t > 100) s -= 25;
-          else if (t > 92)  s -= 18;
-          else if (t > 85)  s -= 8;
-          else if (t >= 65 && t <= 80) s += 5; // bonus for perfect temps
-
-          // ---- Sky conditions (0–10 pts) ----
-          if (f.includes("overcast"))              s -= 10;
-          else if (f.includes("mostly cloudy"))    s -= 7;
-          else if (f.includes("cloudy"))           s -= 5;
-          else if (f.includes("partly"))           s -= 2;
-          else if (f.includes("sunny") || f.includes("clear")) s += 3;
-
-          // ---- Wind (0–10 pts) ----
-          if (wind > 30)      s -= 10;
-          else if (wind > 20) s -= 6;
-          else if (wind > 12) s -= 3;
-
-          // ---- UV (0–5 pts) ----
-          if (uv > 10) s -= 5;
-          else if (uv > 7) s -= 3;
-
-          return Math.max(0, Math.min(100, s));
-        }
         const satScore = rateDay(satPeriod);
         const sunScore = rateDay(sunPeriod);
         const avg = [satScore, sunScore].filter(s => s != null).reduce((a,b)=>a+b,0)
@@ -2190,10 +2253,14 @@ async function loadWeather() {
         card.removeChild(tooltip);
         document.body.appendChild(tooltip);
         const show = () => {
-          const r = card.getBoundingClientRect();
-          tooltip.style.top  = (r.bottom + 10) + "px";
+          const r    = card.getBoundingClientRect();
           const left = Math.min(r.left, window.innerWidth - 240);
-          tooltip.style.left = Math.max(8, left) + "px";
+          const clampedLeft = Math.max(8, left);
+          tooltip.style.top  = (r.bottom + 8) + "px";
+          tooltip.style.left = clampedLeft + "px";
+          // Arrow points to center of card
+          const arrowLeft = Math.max(8, Math.min(200, r.left + r.width / 2 - clampedLeft - 6));
+          tooltip.style.setProperty("--arrow-left", arrowLeft + "px");
           tooltip.classList.add("visible");
         };
         const hide = () => tooltip.classList.remove("visible");
@@ -2201,6 +2268,10 @@ async function loadWeather() {
         card.addEventListener("mouseleave", hide);
         card.addEventListener("focus", show);
         card.addEventListener("blur", hide);
+        card.addEventListener("touchend", (e) => {
+          e.preventDefault();
+          tooltip.classList.contains("visible") ? hide() : show();
+        });
       }
 
       box.appendChild(card);
@@ -2641,8 +2712,11 @@ function chipTooltip(id, text) {
 
     const show = () => {
       const r = el.getBoundingClientRect();
-      tip.style.top  = (r.bottom + 10) + "px";
-      tip.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 280)) + "px";
+      const clampedLeft = Math.max(8, Math.min(r.left, window.innerWidth - 280));
+      tip.style.top  = (r.bottom + 8) + "px";
+      tip.style.left = clampedLeft + "px";
+      const arrowLeft = Math.max(8, Math.min(240, r.left + r.width / 2 - clampedLeft - 6));
+      tip.style.setProperty("--arrow-left", arrowLeft + "px");
       tip.classList.add("visible");
     };
     const hide = () => tip.classList.remove("visible");
@@ -2853,6 +2927,11 @@ loadRSS();
 loadExtras();
 loadFunFact();
 document.getElementById("footerYear").textContent = new Date().getFullYear();
+
+// Hide all tooltips on scroll (fixes mobile sticky tooltip issue)
+window.addEventListener("scroll", () => {
+  document.querySelectorAll(".fc-tooltip.visible").forEach(t => t.classList.remove("visible"));
+}, { passive: true });
 
 setInterval(loadWeather, 600_000);
 setInterval(loadAlerts,  900_000);
