@@ -395,13 +395,13 @@ iframe {
 }
 .cc-icon-wrap { width: 90px; height: 90px; flex-shrink: 0; }
 .cc-temp {
-  font-size: clamp(3.8rem, 15vw, 6rem);
+  font-size: clamp(4.5rem, 18vw, 6rem);
   font-weight: 200;
   line-height: 1;
   letter-spacing: -0.05em;
 }
 .cc-sky {
-  font-size: 1.05rem;
+  font-size: clamp(0.95rem, 4vw, 1.05rem);
   font-weight: 300;
   color: var(--text-2);
   margin-top: 5px;
@@ -1033,6 +1033,16 @@ iframe {
   .cc-extra-row { grid-template-columns: repeat(2, 1fr); }
 }
 
+@media (max-width: 600px) {
+  /* Hero — larger icon and temp on mobile */
+  .cc-hero { padding: 20px 18px 18px; }
+  .cc-icon-wrap { width: 80px; height: 80px; }
+  .cc-main { gap: 16px; }
+  .cc-location { margin-bottom: 14px; font-size: 0.64rem; }
+  .cc-sky { font-size: 1rem; margin-top: 4px; }
+  .cc-detail { font-size: 0.78rem; margin-top: 10px; padding-top: 10px; }
+}
+
 .funfact-card {
   background: var(--glass-bg);
   backdrop-filter: blur(24px);
@@ -1086,11 +1096,10 @@ iframe {
 
 /* ---- iPhone SE and small phones (≤ 390px) ---- */
 @media (max-width: 390px) {
-  /* Temperature — scale down from 6rem */
-  .cc-temp { font-size: 4.2rem; }
-
   /* Hero section tighter padding */
-  .cc-hero { padding: 12px 16px 8px; }
+  .cc-hero { padding: 14px 14px 12px; }
+  .cc-icon-wrap { width: 64px; height: 64px; }
+  .cc-main { gap: 12px; }
 
   /* Metrics chips — tighter text */
   .cc-metrics { padding: 10px 16px; gap: 6px; }
