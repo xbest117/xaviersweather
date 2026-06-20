@@ -634,6 +634,88 @@ iframe {
 .uv-hour-item.now .uv-hour-time { color: #fbbf24; font-weight: 700; }
 .uv-hour-item.now .uv-hour-val  { color: #fbbf24; }
 
+/* Day detail panel (hourly breakdown for a tapped forecast day) */
+.day-detail-panel {
+  display: none;
+  position: fixed;
+  left: 0; right: 0;
+  background: rgba(8,18,32,0.98);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 16px 20px 18px;
+  z-index: 200;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.55);
+}
+.day-detail-panel.open {
+  display: block;
+  animation: uv-panel-in 0.2s ease;
+}
+.day-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.day-detail-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: 0.01em;
+}
+.day-detail-desc {
+  font-size: 0.74rem;
+  color: var(--text-3);
+  margin-top: 3px;
+  line-height: 1.4;
+  max-width: 90%;
+}
+.day-detail-close {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--glass-border-b);
+  color: var(--text-2);
+  border-radius: 8px;
+  width: 30px; height: 30px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.day-detail-close:hover { background: rgba(255,255,255,0.14); }
+.day-detail-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.day-detail-scroll::-webkit-scrollbar { display: none; }
+.dd-hour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 62px;
+  flex-shrink: 0;
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-b);
+  border-radius: 12px;
+  padding: 10px 6px 12px;
+}
+.dd-hour-time { font-size: 0.66rem; color: var(--text-3); white-space: nowrap; }
+.dd-hour-icon { width: 30px; height: 30px; }
+.dd-hour-temp { font-size: 0.84rem; font-weight: 600; color: var(--text-1); }
+.dd-hour-pop {
+  font-size: 0.62rem;
+  color: #60a5fa;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 0.8rem;
+}
+
 @keyframes sunrise-ray  { 0%,100% { transform: translateY(0);   opacity:.8; } 50% { transform: translateY(-3px); opacity:1; } }
 @keyframes sunset-ray   { 0%,100% { opacity:.5; } 50% { opacity:1; } }
 @keyframes uv-pulse     { 0%,100% { filter: drop-shadow(0 0 2px rgba(251,191,36,0.4)); } 50% { filter: drop-shadow(0 0 8px rgba(251,191,36,0.9)); } }
@@ -1313,6 +1395,18 @@ iframe {
         <div class="uv-hourly-scroll" id="uvHourlyScroll"></div>
       </div>
 
+      <!-- Day detail panel — hourly breakdown for a tapped forecast day -->
+      <div class="day-detail-panel" id="dayDetailPanel">
+        <div class="day-detail-header">
+          <div>
+            <div class="day-detail-title" id="dayDetailTitle">—</div>
+            <div class="day-detail-desc" id="dayDetailDesc"></div>
+          </div>
+          <button class="day-detail-close" id="dayDetailClose" aria-label="Close">✕</button>
+        </div>
+        <div class="day-detail-scroll" id="dayDetailScroll"></div>
+      </div>
+
         <!-- Extra info chips: AQI, Pollen, Precip, Snow, Moon, Historical, Feels Trend, Outdoor, Weekend -->
         <div class="cc-extra-row" id="extraRow">
           <div class="cc-extra-chip" id="eAQI"      aria-label="Air Quality"></div>
@@ -1817,6 +1911,7 @@ function applyTheme(summary, isNight) {
 // LOAD WEATHER
 // ============================================================
 let _omFull = null; // shared Open-Meteo full response for reuse across functions
+let _hourlyPeriods = []; // NWS hourly forecast, shared for day-detail panel
 async function loadWeather() {
   document.getElementById("statusText").textContent = "Updating…";
   try {
@@ -1856,6 +1951,7 @@ async function loadWeather() {
       const hj = await hourlyRes.json();
       hourlyPeriods = hj.properties?.periods || [];
     }
+    _hourlyPeriods = hourlyPeriods;
     const hourlyNow = hourlyPeriods[0] || null;
 
     // Forecast (required)
@@ -2319,24 +2415,27 @@ async function loadWeather() {
           const clampedLeft = Math.max(8, left);
           tooltip.style.top  = (r.bottom + 8) + "px";
           tooltip.style.left = clampedLeft + "px";
-          // Arrow points to center of card
           const arrowLeft = Math.max(8, Math.min(200, r.left + r.width / 2 - clampedLeft - 6));
           tooltip.style.setProperty("--arrow-left", arrowLeft + "px");
           tooltip.classList.add("visible");
         };
         const hide = () => tooltip.classList.remove("visible");
+        // Desktop: quick hover peek of the detailed forecast
         card.addEventListener("mouseenter", show);
         card.addEventListener("mouseleave", hide);
-        card.addEventListener("focus", show);
-        card.addEventListener("blur", hide);
-        card.addEventListener("touchend", (e) => {
-          e.preventDefault();
-          const isOpen = tooltip.classList.contains("visible");
-          // Close all open tooltips first
-          document.querySelectorAll(".fc-tooltip.visible").forEach(t => t.classList.remove("visible"));
-          if (!isOpen) show();
-        });
       }
+
+      // Click / tap / keyboard → open full hourly breakdown panel for this day
+      const openDay = (e) => {
+        if (e) e.preventDefault();
+        document.querySelectorAll(".fc-tooltip.visible").forEach(t => t.classList.remove("visible"));
+        openDayDetail(p);
+      };
+      card.addEventListener("click", openDay);
+      card.addEventListener("touchend", openDay);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") openDay(e);
+      });
 
       box.appendChild(card);
     }
@@ -2996,6 +3095,81 @@ async function loadExtras() {
 let _lastWeatherLoad = 0;
 let _lastAlertLoad   = 0;
 let _lastExtrasLoad  = 0;
+
+// ============================================================
+// DAY DETAIL PANEL — hourly breakdown for a tapped forecast day
+// ============================================================
+function openDayDetail(period) {
+  const panel  = document.getElementById("dayDetailPanel");
+  const titleEl = document.getElementById("dayDetailTitle");
+  const descEl  = document.getElementById("dayDetailDesc");
+  const scroll  = document.getElementById("dayDetailScroll");
+  if (!panel || !period) return;
+
+  titleEl.textContent = period.name || "Forecast";
+  descEl.textContent  = period.detailedForecast || period.shortForecast || "";
+
+  // Figure out which calendar date this forecast period covers
+  const periodDate = period.startTime ? period.startTime.slice(0, 10) : null;
+  const isNight = period.isDaytime === false;
+
+  // Filter hourly periods to this day; for night periods, show evening→morning
+  let hours = _hourlyPeriods.filter(h => {
+    if (!h.startTime) return false;
+    const hDate = h.startTime.slice(0, 10);
+    const hHour = parseInt(h.startTime.slice(11, 13));
+    if (isNight) {
+      // Night = 6pm of this date through 6am next date
+      const next = periodDate;
+      return (hDate === periodDate && hHour >= 18) ||
+             (new Date(hDate) - new Date(periodDate) === 86400000 && hHour < 6);
+    }
+    // Daytime = 6am–9pm of this date
+    return hDate === periodDate && hHour >= 6 && hHour <= 21;
+  });
+
+  // Fallback: if no hourly match (later days beyond hourly range), show a message
+  if (!hours.length) {
+    scroll.innerHTML = `<div style="font-size:0.8rem;color:var(--text-3);padding:10px 0">Hour-by-hour detail isn't available this far out yet. Check back closer to the day!</div>`;
+  } else {
+    scroll.innerHTML = hours.map(h => {
+      const hr   = parseInt(h.startTime.slice(11, 13));
+      const ampm = hr === 0 ? "12a" : hr < 12 ? `${hr}a` : hr === 12 ? "12p" : `${hr-12}p`;
+      const pop  = h.probabilityOfPrecipitation?.value ?? 0;
+      const icon = svgIcon(resolveIcon(h.shortForecast, h.isDaytime === false), "small");
+      return `<div class="dd-hour">` +
+        `<span class="dd-hour-time">${ampm}</span>` +
+        `<div class="dd-hour-icon">${icon}</div>` +
+        `<span class="dd-hour-temp">${h.temperature}°</span>` +
+        `<span class="dd-hour-pop">${pop > 0 ? "💧" + pop + "%" : ""}</span>` +
+        `</div>`;
+    }).join("");
+  }
+
+  // Position below the forecast section and show
+  panel.classList.add("open");
+  const fc = document.getElementById("forecastBox");
+  if (fc) {
+    const r = fc.getBoundingClientRect();
+    panel.style.top = Math.min(r.bottom + 8, window.innerHeight - 200) + "px";
+  }
+}
+
+// Close day detail panel handlers
+(function() {
+  const panel = document.getElementById("dayDetailPanel");
+  const closeBtn = document.getElementById("dayDetailClose");
+  if (closeBtn) closeBtn.addEventListener("click", () => panel.classList.remove("open"));
+  document.addEventListener("click", (e) => {
+    if (!panel || !panel.classList.contains("open")) return;
+    if (!panel.contains(e.target) && !e.target.closest(".fc-card")) {
+      panel.classList.remove("open");
+    }
+  });
+  window.addEventListener("scroll", () => {
+    if (panel) panel.classList.remove("open");
+  }, { passive: true });
+})();
 
 async function loadWeatherWithRetry(attempt = 1) {
   try {
