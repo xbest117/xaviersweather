@@ -2426,10 +2426,15 @@ async function loadWeather() {
       }
 
       // Click / tap / keyboard → open full hourly breakdown panel for this day
+      let _lastTap = 0;
       const openDay = (e) => {
+        // Dedupe: touchend fires then a synthetic click ~300ms later
+        const now = Date.now();
+        if (now - _lastTap < 500) { if (e) e.preventDefault(); return; }
+        _lastTap = now;
         if (e) e.preventDefault();
         document.querySelectorAll(".fc-tooltip.visible").forEach(t => t.classList.remove("visible"));
-        openDayDetail(p);
+        openDayDetail(p, card);
       };
       card.addEventListener("click", openDay);
       card.addEventListener("touchend", openDay);
@@ -3099,8 +3104,8 @@ let _lastExtrasLoad  = 0;
 // ============================================================
 // DAY DETAIL PANEL — hourly breakdown for a tapped forecast day
 // ============================================================
-function openDayDetail(period) {
-  const panel  = document.getElementById("dayDetailPanel");
+function openDayDetail(period, cardEl) {
+  const panel   = document.getElementById("dayDetailPanel");
   const titleEl = document.getElementById("dayDetailTitle");
   const descEl  = document.getElementById("dayDetailDesc");
   const scroll  = document.getElementById("dayDetailScroll");
@@ -3109,49 +3114,50 @@ function openDayDetail(period) {
   titleEl.textContent = period.name || "Forecast";
   descEl.textContent  = period.detailedForecast || period.shortForecast || "";
 
-  // Figure out which calendar date this forecast period covers
-  const periodDate = period.startTime ? period.startTime.slice(0, 10) : null;
-  const isNight = period.isDaytime === false;
+  // Match hourly periods whose start falls within this forecast period's window.
+  // NWS periods provide startTime and endTime — use them directly (robust, no guessing).
+  const start = period.startTime ? new Date(period.startTime).getTime() : null;
+  const end   = period.endTime   ? new Date(period.endTime).getTime()   : null;
 
-  // Filter hourly periods to this day; for night periods, show evening→morning
-  let hours = _hourlyPeriods.filter(h => {
-    if (!h.startTime) return false;
-    const hDate = h.startTime.slice(0, 10);
-    const hHour = parseInt(h.startTime.slice(11, 13));
-    if (isNight) {
-      // Night = 6pm of this date through 6am next date
-      const next = periodDate;
-      return (hDate === periodDate && hHour >= 18) ||
-             (new Date(hDate) - new Date(periodDate) === 86400000 && hHour < 6);
-    }
-    // Daytime = 6am–9pm of this date
-    return hDate === periodDate && hHour >= 6 && hHour <= 21;
-  });
+  let hours = [];
+  if (start != null && end != null) {
+    hours = _hourlyPeriods.filter(h => {
+      if (!h.startTime) return false;
+      const t = new Date(h.startTime).getTime();
+      return t >= start && t < end;
+    });
+  }
 
-  // Fallback: if no hourly match (later days beyond hourly range), show a message
   if (!hours.length) {
-    scroll.innerHTML = `<div style="font-size:0.8rem;color:var(--text-3);padding:10px 0">Hour-by-hour detail isn't available this far out yet. Check back closer to the day!</div>`;
+    scroll.innerHTML = `<div style="font-size:0.8rem;color:var(--text-3);padding:10px 4px">Hour-by-hour detail isn't available this far out yet. Check back closer to the day!</div>`;
   } else {
     scroll.innerHTML = hours.map(h => {
-      const hr   = parseInt(h.startTime.slice(11, 13));
-      const ampm = hr === 0 ? "12a" : hr < 12 ? `${hr}a` : hr === 12 ? "12p" : `${hr-12}p`;
+      const d    = new Date(h.startTime);
+      const hr   = d.getHours();
+      const ampm = hr === 0 ? "12 AM" : hr < 12 ? `${hr} AM` : hr === 12 ? "12 PM" : `${hr-12} PM`;
       const pop  = h.probabilityOfPrecipitation?.value ?? 0;
-      const icon = svgIcon(resolveIcon(h.shortForecast, h.isDaytime === false), "small");
+      const icon = svgIcon(resolveIcon(h.shortForecast, h.isDaytime === false), "med");
       return `<div class="dd-hour">` +
         `<span class="dd-hour-time">${ampm}</span>` +
         `<div class="dd-hour-icon">${icon}</div>` +
         `<span class="dd-hour-temp">${h.temperature}°</span>` +
-        `<span class="dd-hour-pop">${pop > 0 ? "💧" + pop + "%" : ""}</span>` +
+        `<span class="dd-hour-pop">${pop > 0 ? "💧 " + pop + "%" : ""}</span>` +
         `</div>`;
     }).join("");
   }
 
-  // Position below the forecast section and show
+  // Show, then position directly below the tapped card (or forecast box as fallback)
   panel.classList.add("open");
-  const fc = document.getElementById("forecastBox");
-  if (fc) {
-    const r = fc.getBoundingClientRect();
-    panel.style.top = Math.min(r.bottom + 8, window.innerHeight - 200) + "px";
+  const anchor = cardEl || document.getElementById("forecastBox");
+  if (anchor) {
+    const r = anchor.getBoundingClientRect();
+    const panelH = panel.offsetHeight || 180;
+    // Prefer below the card; if it would go off-screen, place above
+    let top = r.bottom + 8;
+    if (top + panelH > window.innerHeight - 10) {
+      top = Math.max(10, r.top - panelH - 8);
+    }
+    panel.style.top = top + "px";
   }
 }
 
@@ -3162,12 +3168,18 @@ function openDayDetail(period) {
   if (closeBtn) closeBtn.addEventListener("click", () => panel.classList.remove("open"));
   document.addEventListener("click", (e) => {
     if (!panel || !panel.classList.contains("open")) return;
-    if (!panel.contains(e.target) && !e.target.closest(".fc-card")) {
+    // Ignore the click that opened it (the forecast card)
+    if (panel.contains(e.target) || e.target.closest(".fc-card")) return;
+    panel.classList.remove("open");
+  });
+  // Only dismiss on a real scroll of meaningful distance, not the layout shift from opening
+  let lastScrollY = window.scrollY;
+  window.addEventListener("scroll", () => {
+    if (!panel || !panel.classList.contains("open")) { lastScrollY = window.scrollY; return; }
+    if (Math.abs(window.scrollY - lastScrollY) > 40) {
       panel.classList.remove("open");
     }
-  });
-  window.addEventListener("scroll", () => {
-    if (panel) panel.classList.remove("open");
+    lastScrollY = window.scrollY;
   }, { passive: true });
 })();
 
