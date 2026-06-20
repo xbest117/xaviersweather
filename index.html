@@ -467,7 +467,6 @@ iframe {
   opacity: 0.8;
   text-transform: none;
 }
-.stale-warn { color: #fbbf24; font-weight: 600; }
 
 .cc-sun-row {
   display: grid;
@@ -1255,7 +1254,6 @@ iframe {
 
   /* Metrics chips — tighter text */
   .cc-metrics { padding: 10px 16px; gap: 6px; }
-  .cc-metrics-chip { font-size: 0.68rem; padding: 6px 8px; }
 
   /* Sun row — stack UV chip below */
   .cc-sun-row { grid-template-columns: 1fr 1fr; gap: 6px; padding: 10px 16px; }
@@ -1266,15 +1264,6 @@ iframe {
   .cc-extra-chip { padding: 8px 10px; }
   .chip-val { font-size: 0.82rem; }
   .chip-sub { font-size: 0.62rem; }
-
-  /* Hourly strip — smaller cards */
-  .hourly-card { min-width: 52px; padding: 8px 6px; }
-
-  /* 7-day bars — smaller labels */
-  .temp-range-row { font-size: 0.66rem; }
-
-  /* Forecast grid — 2 cols already, just tighten */
-  .forecast-card { padding: 10px 8px; font-size: 0.72rem; }
 
   /* Page padding */
   .page-body { padding: 10px 12px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); gap: 14px; }
@@ -1522,7 +1511,9 @@ iframe {
           title="Live Radar"
           src="https://embed.windy.com/embed2.html?lat=40.49&lon=-81.44&zoom=7&overlay=radar"
           style="flex:1; width:100%; border:0;"
-          height="620">
+          height="620"
+          loading="lazy"
+          allow="geolocation 'none'; microphone 'none'; camera 'none'">
         </iframe>
       </div>
 
