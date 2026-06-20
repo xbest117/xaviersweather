@@ -2942,12 +2942,22 @@ async function loadExtras() {
     const precipSub = next24.toFixed(2) + '" expected next 24h';
     chip("ePrecip", "Precipitation", precipVal, precipSub, last24 > 0 || next24 > 0 ? "#93c5fd" : null);
 
-    chip("eSnow", "Snowfall Today",
-      snow != null && snow > 0 ? snow.toFixed(1) + '"' : "None",
-      snow > 0 ? "Today's total" : "No snow today", snow > 0 ? "#93c5fd" : null);
+    // Snowfall — hide chip May–Sept (out of season) unless snow is actually present
+    const snowChipEl = document.getElementById("eSnow");
+    const month = new Date().getMonth() + 1; // 1=Jan
+    const snowSeason = month <= 4 || month >= 10; // Oct–Apr
+    if (snowChipEl) {
+      if (snowSeason || (snow != null && snow > 0)) {
+        snowChipEl.style.display = "";
+        chip("eSnow", "Snowfall Today",
+          snow != null && snow > 0 ? snow.toFixed(1) + '"' : "None",
+          snow > 0 ? "Today's total" : "No snow today", snow > 0 ? "#93c5fd" : null);
+      } else {
+        snowChipEl.style.display = "none";
+      }
+    }
   } catch(e) {
     chip("ePrecip", "Precip Today", "—", null, null);
-    chip("eSnow",   "Snowfall",     "—", null, null);
     console.warn("Precip/Snow error:", e);
   }
 
