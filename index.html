@@ -549,34 +549,9 @@ iframe {
   pointer-events: none;
 }
 .cc-uv-chip { cursor: pointer; }
-.uv-hourly-panel {
-  display: none;
-  position: fixed;
-  left: 0; right: 0;
-  background: rgba(8,18,32,0.97);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-top: 1px solid var(--glass-border);
-  border-bottom: 1px solid var(--glass-border);
-  padding: 12px 20px 16px;
-  z-index: 200;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-}
-.uv-hourly-panel.open {
-  display: block;
-  animation: uv-panel-in 0.2s ease;
-}
 @keyframes uv-panel-in {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-.uv-panel-header {
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  margin-bottom: 10px;
 }
 .uv-hourly-scroll {
   display: flex;
@@ -634,86 +609,137 @@ iframe {
 .uv-hour-item.now .uv-hour-time { color: #fbbf24; font-weight: 700; }
 .uv-hour-item.now .uv-hour-val  { color: #fbbf24; }
 
-/* Day detail panel (hourly breakdown for a tapped forecast day) */
+/* Day detail modal (hourly breakdown for a tapped forecast day) */
 .day-detail-panel {
   display: none;
   position: fixed;
-  left: 0; right: 0;
-  background: rgba(8,18,32,0.98);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-top: 1px solid var(--glass-border);
-  border-bottom: 1px solid var(--glass-border);
-  padding: 16px 20px 18px;
-  z-index: 200;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.55);
+  inset: 0;
+  z-index: 300;
+  background: rgba(4,10,20,0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 20px;
+  align-items: center;
+  justify-content: center;
 }
 .day-detail-panel.open {
-  display: block;
-  animation: uv-panel-in 0.2s ease;
+  display: flex;
+  animation: dd-fade 0.2s ease;
 }
+@keyframes dd-fade { from { opacity: 0; } to { opacity: 1; } }
+.day-detail-inner {
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: rgba(10,22,40,0.98);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 22px 24px 24px;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+  animation: dd-slide 0.25s cubic-bezier(0.2,0.8,0.2,1);
+}
+@keyframes dd-slide { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .day-detail-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 .day-detail-title {
-  font-size: 0.95rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--text-1);
   letter-spacing: 0.01em;
 }
 .day-detail-desc {
-  font-size: 0.74rem;
-  color: var(--text-3);
-  margin-top: 3px;
-  line-height: 1.4;
-  max-width: 90%;
+  font-size: 0.82rem;
+  color: var(--text-2);
+  margin-top: 6px;
+  line-height: 1.5;
 }
 .day-detail-close {
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.08);
   border: 1px solid var(--glass-border-b);
-  color: var(--text-2);
-  border-radius: 8px;
-  width: 30px; height: 30px;
-  font-size: 0.85rem;
+  color: var(--text-1);
+  border-radius: 10px;
+  width: 36px; height: 36px;
+  font-size: 1rem;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.day-detail-close:hover { background: rgba(255,255,255,0.14); }
+.day-detail-close:hover { background: rgba(255,255,255,0.16); }
+.day-detail-section-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 12px;
+}
+.day-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.dd-stat {
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-b);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.dd-stat-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+.dd-stat-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-1);
+}
+@media (max-width: 500px) {
+  .day-detail-stats { grid-template-columns: repeat(2, 1fr); }
+}
 .day-detail-scroll {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
 }
-.day-detail-scroll::-webkit-scrollbar { display: none; }
+.day-detail-scroll::-webkit-scrollbar { height: 6px; }
+.day-detail-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.06); border-radius: 99px; }
+.day-detail-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.25); border-radius: 99px; }
 .dd-hour {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  min-width: 62px;
+  min-width: 64px;
   flex-shrink: 0;
   background: var(--glass-inset);
   border: 1px solid var(--glass-border-b);
   border-radius: 12px;
-  padding: 10px 6px 12px;
+  padding: 12px 6px 14px;
 }
-.dd-hour-time { font-size: 0.66rem; color: var(--text-3); white-space: nowrap; }
-.dd-hour-icon { width: 30px; height: 30px; }
-.dd-hour-temp { font-size: 0.84rem; font-weight: 600; color: var(--text-1); }
+.dd-hour-time { font-size: 0.68rem; color: var(--text-3); white-space: nowrap; }
+.dd-hour-icon { width: 32px; height: 32px; }
+.dd-hour-temp { font-size: 0.9rem; font-weight: 600; color: var(--text-1); }
 .dd-hour-pop {
-  font-size: 0.62rem;
+  font-size: 0.64rem;
   color: #60a5fa;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  min-height: 0.8rem;
+  min-height: 0.85rem;
 }
 
 @keyframes sunrise-ray  { 0%,100% { transform: translateY(0);   opacity:.8; } 50% { transform: translateY(-3px); opacity:1; } }
@@ -1390,22 +1416,8 @@ iframe {
         </div><!-- end cc-sun-row -->
 
       <!-- Expandable hourly UV panel — inside glass but uses cc-sun-row overflow -->
-      <div class="uv-hourly-panel" id="uvHourlyPanel">
-        <div class="uv-panel-header">UV Index — Today's Hours</div>
-        <div class="uv-hourly-scroll" id="uvHourlyScroll"></div>
-      </div>
 
-      <!-- Day detail panel — hourly breakdown for a tapped forecast day -->
-      <div class="day-detail-panel" id="dayDetailPanel">
-        <div class="day-detail-header">
-          <div>
-            <div class="day-detail-title" id="dayDetailTitle">—</div>
-            <div class="day-detail-desc" id="dayDetailDesc"></div>
-          </div>
-          <button class="day-detail-close" id="dayDetailClose" aria-label="Close">✕</button>
-        </div>
-        <div class="day-detail-scroll" id="dayDetailScroll"></div>
-      </div>
+
 
         <!-- Extra info chips: AQI, Pollen, Precip, Snow, Moon, Historical, Feels Trend, Outdoor, Weekend -->
         <div class="cc-extra-row" id="extraRow">
@@ -1538,6 +1550,37 @@ iframe {
 <footer class="site-footer">
   &copy; 2018 &ndash; <span id="footerYear"></span> Xavier's Weather &nbsp;&middot;&nbsp; Tuscarawas County, Ohio
 </footer>
+
+<!-- Day detail modal — direct body child so position:fixed covers the full viewport -->
+<div class="day-detail-panel" id="dayDetailPanel">
+  <div class="day-detail-inner">
+    <div class="day-detail-header">
+      <div>
+        <div class="day-detail-title" id="dayDetailTitle">—</div>
+        <div class="day-detail-desc" id="dayDetailDesc"></div>
+      </div>
+      <button class="day-detail-close" id="dayDetailClose" aria-label="Close">✕</button>
+    </div>
+    <div class="day-detail-stats" id="dayDetailStats"></div>
+    <div class="day-detail-section-label">Hour by Hour</div>
+    <div class="day-detail-scroll" id="dayDetailScroll"></div>
+  </div>
+</div>
+
+<!-- UV hourly modal -->
+<div class="day-detail-panel" id="uvHourlyPanel">
+  <div class="day-detail-inner">
+    <div class="day-detail-header">
+      <div>
+        <div class="day-detail-title">UV Index</div>
+        <div class="day-detail-desc">Hour-by-hour UV levels for today</div>
+      </div>
+      <button class="day-detail-close" id="uvDetailClose" aria-label="Close">✕</button>
+    </div>
+    <div class="day-detail-section-label">Today's Hours</div>
+    <div class="uv-hourly-scroll" id="uvHourlyScroll"></div>
+  </div>
+</div>
 
 <script>
 // Global JSONP callback slot for Blogger feed
@@ -2191,39 +2234,21 @@ async function loadWeather() {
         }
       }
 
-      // Toggle panel on chip click — position below chip
+      // Open UV modal on chip click/tap (centered overlay, like day detail)
       const uvChip  = document.getElementById("sUV");
       const uvPanel = document.getElementById("uvHourlyPanel");
       if (uvChip && uvPanel && !uvChip._uvToggleSet) {
         uvChip._uvToggleSet = true;
-        uvChip.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (uvPanel.classList.contains("open")) {
-            uvPanel.classList.remove("open");
-          } else {
-            const r = uvChip.getBoundingClientRect();
-            uvPanel.style.top = (r.bottom + 2) + "px";
-            uvPanel.classList.add("open");
-          }
-        });
-        uvChip.addEventListener("touchend", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (uvPanel.classList.contains("open")) {
-            uvPanel.classList.remove("open");
-          } else {
-            const r = uvChip.getBoundingClientRect();
-            uvPanel.style.top = (r.bottom + 2) + "px";
-            uvPanel.classList.add("open");
-          }
-        });
-        document.addEventListener("click", (e) => {
-          if (!uvChip.contains(e.target) && !uvPanel.contains(e.target)) {
-            uvPanel.classList.remove("open");
-          }
-        });
-        // Also close on scroll
-        window.addEventListener("scroll", () => uvPanel.classList.remove("open"), { passive: true });
+        let _uvLastTap = 0;
+        const openUV = (e) => {
+          const now = Date.now();
+          if (now - _uvLastTap < 500) { if (e) e.preventDefault(); return; }
+          _uvLastTap = now;
+          if (e) { e.preventDefault(); e.stopPropagation(); }
+          uvPanel.classList.add("open");
+        };
+        uvChip.addEventListener("click", openUV);
+        uvChip.addEventListener("touchend", openUV);
       }
     }
 
@@ -3130,7 +3155,27 @@ function openDayDetail(period, cardEl) {
 
   if (!hours.length) {
     scroll.innerHTML = `<div style="font-size:0.8rem;color:var(--text-3);padding:10px 4px">Hour-by-hour detail isn't available this far out yet. Check back closer to the day!</div>`;
+    document.getElementById("dayDetailStats").innerHTML = "";
   } else {
+    // Summary stats from the hourly data
+    const temps = hours.map(h => h.temperature).filter(t => typeof t === "number");
+    const pops  = hours.map(h => h.probabilityOfPrecipitation?.value ?? 0);
+    const hums  = hours.map(h => h.relativeHumidity?.value).filter(v => typeof v === "number");
+    const hi    = temps.length ? Math.max(...temps) : null;
+    const lo    = temps.length ? Math.min(...temps) : null;
+    const maxPop = pops.length ? Math.max(...pops) : 0;
+    const avgHum = hums.length ? Math.round(hums.reduce((a,b)=>a+b,0)/hums.length) : null;
+    // Wind from the daytime/period card itself
+    const wind  = period.windSpeed || (hours[0]?.windSpeed) || "—";
+    const windDir = period.windDirection || hours[0]?.windDirection || "";
+
+    const statsEl = document.getElementById("dayDetailStats");
+    statsEl.innerHTML =
+      `<div class="dd-stat"><div class="dd-stat-label">High</div><div class="dd-stat-value">${hi != null ? hi + "°" : "—"}</div></div>` +
+      `<div class="dd-stat"><div class="dd-stat-label">Low</div><div class="dd-stat-value">${lo != null ? lo + "°" : "—"}</div></div>` +
+      `<div class="dd-stat"><div class="dd-stat-label">Rain Chance</div><div class="dd-stat-value">${maxPop}%</div></div>` +
+      `<div class="dd-stat"><div class="dd-stat-label">Humidity</div><div class="dd-stat-value">${avgHum != null ? avgHum + "%" : "—"}</div></div>`;
+
     scroll.innerHTML = hours.map(h => {
       const d    = new Date(h.startTime);
       const hr   = d.getHours();
@@ -3146,41 +3191,30 @@ function openDayDetail(period, cardEl) {
     }).join("");
   }
 
-  // Show, then position directly below the tapped card (or forecast box as fallback)
+  // Show modal (centered overlay — no positioning needed)
   panel.classList.add("open");
-  const anchor = cardEl || document.getElementById("forecastBox");
-  if (anchor) {
-    const r = anchor.getBoundingClientRect();
-    const panelH = panel.offsetHeight || 180;
-    // Prefer below the card; if it would go off-screen, place above
-    let top = r.bottom + 8;
-    if (top + panelH > window.innerHeight - 10) {
-      top = Math.max(10, r.top - panelH - 8);
-    }
-    panel.style.top = top + "px";
-  }
 }
 
-// Close day detail panel handlers
+// Close modal handlers (day detail + UV)
 (function() {
-  const panel = document.getElementById("dayDetailPanel");
-  const closeBtn = document.getElementById("dayDetailClose");
-  if (closeBtn) closeBtn.addEventListener("click", () => panel.classList.remove("open"));
-  document.addEventListener("click", (e) => {
-    if (!panel || !panel.classList.contains("open")) return;
-    // Ignore the click that opened it (the forecast card)
-    if (panel.contains(e.target) || e.target.closest(".fc-card")) return;
-    panel.classList.remove("open");
+  const modals = [
+    { panel: document.getElementById("dayDetailPanel"), btn: document.getElementById("dayDetailClose") },
+    { panel: document.getElementById("uvHourlyPanel"),  btn: document.getElementById("uvDetailClose") },
+  ];
+  modals.forEach(({ panel, btn }) => {
+    if (!panel) return;
+    if (btn) btn.addEventListener("click", () => panel.classList.remove("open"));
+    // Click on the dark backdrop (outside the inner card) closes
+    panel.addEventListener("click", (e) => {
+      if (e.target === panel) panel.classList.remove("open");
+    });
   });
-  // Only dismiss on a real scroll of meaningful distance, not the layout shift from opening
-  let lastScrollY = window.scrollY;
-  window.addEventListener("scroll", () => {
-    if (!panel || !panel.classList.contains("open")) { lastScrollY = window.scrollY; return; }
-    if (Math.abs(window.scrollY - lastScrollY) > 40) {
-      panel.classList.remove("open");
+  // Escape closes any open modal
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      modals.forEach(({ panel }) => panel?.classList.remove("open"));
     }
-    lastScrollY = window.scrollY;
-  }, { passive: true });
+  });
 })();
 
 async function loadWeatherWithRetry(attempt = 1) {
@@ -3420,5 +3454,6 @@ _stormObserver.observe(document.body, { attributes: true, attributeFilter: ["cla
   if (panel && active) panel.style.display = "block";
 })();
 </script>
+
 </body>
 </html>
