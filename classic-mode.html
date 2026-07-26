@@ -23,7 +23,7 @@ body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:linear-g
 .navbar::before{content:"";position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(rgba(255,255,255,.55),rgba(255,255,255,0));}
 .navbar .title{font-size:18px;font-weight:700;letter-spacing:.2px;}
 .navbar .subtitle{font-size:11px;font-weight:500;opacity:.92;margin-top:1px;}
-.navbar .navbtn{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:linear-gradient(#5fa3e6,#1e5fa0);border:1px solid #123f7c;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),0 1px 2px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:#fff;text-decoration:none;}
+.navbar .navbtn{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:linear-gradient(#5fa3e6,#1e5fa0);border:1px solid #123f7c;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),0 1px 2px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:#fff;text-decoration:none;-webkit-appearance:none;appearance:none;padding:0;margin:0;font-family:inherit;line-height:1;-webkit-tap-highlight-color:transparent;flex-shrink:0;}
 .navbar .navbtn.right{right:10px;}
 .navbar .navbtn.left{left:10px;}
 .refresh.spin{animation:spin .8s linear;}
@@ -41,7 +41,7 @@ body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:linear-g
 .alertpanel .aitem:last-child{margin-bottom:0;border-bottom:none;padding-bottom:0;}
 .alertpanel .aevent{font-weight:800;color:#a5150a;display:block;margin-bottom:2px;}
 .alertpanel .ameta{font-size:10.5px;color:#8a6a62;margin-top:4px;}
-.content{flex:1 1 auto;padding:12px 12px 90px;background:var(--linen) repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px);}
+.content{flex:1 1 auto;padding:12px 12px calc(90px + env(safe-area-inset-bottom));background:var(--linen) repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px);}
 .tab{display:none;}.tab.active{display:block;}
 .hero{border-radius:14px;background:linear-gradient(#6fb2ec,#2f79cc 55%,#1c5ba8);box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -18px 26px rgba(0,0,0,.18),0 3px 6px rgba(0,0,0,.35);color:#fff;text-align:center;padding:18px 10px 16px;position:relative;overflow:hidden;margin-bottom:14px;}
 .hero::before{content:"";position:absolute;top:0;left:0;right:0;height:45%;background:linear-gradient(rgba(255,255,255,.5),rgba(255,255,255,0));}
@@ -76,11 +76,14 @@ body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:linear-g
 .hcell .hi{margin:6px auto;font-size:22px;}
 .hcell .ht{font-size:14px;font-weight:700;color:var(--ink);}
 .hcell .hp{font-size:10px;color:var(--chrome-blue-dk);font-weight:700;margin-top:2px;}
+.hcell .huv{font-size:9px;color:#c99a2e;font-weight:700;margin-top:1px;}
+.hcell .hwind{font-size:9px;color:#159089;font-weight:700;margin-top:1px;}
 .wrow{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(#ffffff,#fbfbfc);border-bottom:1px solid var(--hairline);font-size:14px;cursor:pointer;}
 .wrow:last-child{border-bottom:none;}
 .wrow .day{width:46px;font-weight:700;color:var(--ink);}
 .wrow .wi{flex:0 0 auto;font-size:19px;}
 .wrow .pop{width:34px;font-size:11px;color:var(--chrome-blue-dk);font-weight:700;text-align:right;}
+.wrow .uv{width:32px;font-size:10px;color:#c99a2e;font-weight:700;text-align:right;}
 .wrow .bar{flex:1;height:5px;border-radius:3px;background:#e4e4e8;position:relative;box-shadow:inset 0 1px 1px rgba(0,0,0,.12);}
 .wrow .bar i{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(#f5b642,#e2791c);}
 .wrow .lo{width:26px;text-align:right;color:var(--ink-soft);font-size:13px;}
@@ -122,7 +125,7 @@ body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:linear-g
 .fbcard .name{font-weight:700;font-size:14px;color:var(--ink);}
 .fbcard .sub{font-size:12px;color:var(--ink-soft);margin:4px 0 10px;line-height:1.4;}
 .fbcard a{display:inline-block;background:#1877f2;color:#fff;font-weight:700;font-size:13px;padding:8px 22px;border-radius:16px;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.4),0 1px 2px rgba(0,0,0,.3);}
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:35;max-width:480px;margin:0 auto;height:58px;padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(160deg,#4a3626,#2a1c12);display:flex;border-top:1px solid #1a1108;}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:35;max-width:480px;margin:0 auto;min-height:58px;padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(160deg,#4a3626,#2a1c12);display:flex;border-top:1px solid #1a1108;box-sizing:content-box;}
 .tabbar::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:rgba(255,255,255,.15);}
 .tabitem{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:#c9b48c;opacity:.62;position:relative;background:none;border:none;font-family:inherit;text-decoration:none;}
 .tabitem .glyph{font-size:19px;filter:drop-shadow(0 -1px 0 rgba(0,0,0,.6));}
@@ -553,8 +556,8 @@ async function loadWeather(){
     lastPeriods = periods;
 
     renderCurrent(periods, obs, obsStale, om, hourlyPeriods[0] || null);
-    renderHourly(hourlyPeriods);
-    renderDaily(periods, hourlyPeriods);
+    renderHourly(hourlyPeriods, om);
+    renderDaily(periods, hourlyPeriods, om);
     renderExtras(periods, om);
     renderOutdoorRating(periods, om, hourlyPeriods);
     renderWeekend(periods);
@@ -574,6 +577,31 @@ function omNowIndex(om){
   let idx = t.findIndex(ts => new Date(ts).getTime() >= now);
   return idx < 0 ? 0 : idx;
 }
+
+// Find the Open-Meteo hourly UV value closest to a given NWS period's startTime
+function omUvForTime(om, isoTime){
+  const t = om?.hourly?.time, uv = om?.hourly?.uv_index;
+  if (!t || !uv || !t.length) return null;
+  const target = new Date(isoTime).getTime();
+  let bestIdx = -1, bestDiff = Infinity;
+  for (let i = 0; i < t.length; i++){
+    const diff = Math.abs(new Date(t[i]).getTime() - target);
+    if (diff < bestDiff){ bestDiff = diff; bestIdx = i; }
+  }
+  return bestIdx >= 0 ? uv[bestIdx] : null;
+}
+
+// Find the Open-Meteo daily UV max for a given date (falls back to hourly midday lookup)
+function omUvForDate(om, isoTime){
+  const dateStr = new Date(isoTime).toDateString();
+  const dTimes = om?.daily?.time, dUv = om?.daily?.uv_index_max;
+  if (dTimes && dUv){
+    const idx = dTimes.findIndex(t => new Date(t + 'T12:00:00').toDateString() === dateStr);
+    if (idx >= 0 && dUv[idx] != null) return dUv[idx];
+  }
+  return omUvForTime(om, isoTime);
+}
+
 
 function renderCurrent(periods, obs, obsStale, om, hourlyNow){
   const cur = periods[0];
@@ -618,24 +646,27 @@ function renderCurrent(periods, obs, obsStale, om, hourlyNow){
   document.title = tempF + '° · Classic Mode · Xavier\'s Weather';
 }
 
-function renderHourly(hourlyPeriods){
+function renderHourly(hourlyPeriods, om){
   if (!hourlyPeriods.length) return;
   const strip = $('hstrip'); strip.innerHTML = '';
-  for (let i=0; i<Math.min(12, hourlyPeriods.length); i++){
+  for (let i=0; i<Math.min(24, hourlyPeriods.length); i++){
     const p = hourlyPeriods[i];
     const d = new Date(p.startTime);
     const isNow = i===0;
     const icon = resolveIcon(p.shortForecast, p.isDaytime===false);
+    const uv = Math.round(omUvForTime(om, p.startTime) ?? 0);
+    const windMph = parseWindMph(p.windSpeed);
+    const wind = windMph!=null ? `${p.windDirection||''} ${Math.round(windMph)}` : '--';
     const cell = document.createElement('div');
     cell.className = 'hcell';
-    cell.innerHTML = `<div class="hr">${formatHourLabel(d,isNow)}</div><div class="hi">${heroEmoji(icon)}</div><div class="ht">${p.temperature}°</div><div class="hp">${p.probabilityOfPrecipitation?.value ?? 0}%</div>`;
+    cell.innerHTML = `<div class="hr">${formatHourLabel(d,isNow)}</div><div class="hi">${heroEmoji(icon)}</div><div class="ht">${p.temperature}°</div><div class="hp">${p.probabilityOfPrecipitation?.value ?? 0}%</div><div class="huv">UV ${uv}</div><div class="hwind">${wind}</div>`;
     strip.appendChild(cell);
   }
 }
 
 let _openDayIdx = null;
 
-function renderDaily(periods, hourlyPeriods){
+function renderDaily(periods, hourlyPeriods, om){
   const dayPeriods = periods.filter(p => p.isDaytime !== false).slice(0,7);
   if (!dayPeriods.length) return;
   const highs = dayPeriods.map(p=>p.temperature);
@@ -655,26 +686,27 @@ function renderDaily(periods, hourlyPeriods){
     const hi = p.temperature, lo = lows[i] ?? (hi-15);
     const leftPct = ((lo-minLo)/span)*70, widthPct = ((hi-lo)/span)*70+10;
     const pop = p.probabilityOfPrecipitation?.value ?? 0;
-    const label = i===0 ? 'Today' : p.name.replace(/\s+Night$/i,'').trim();
+    const label = new Date(p.startTime).toLocaleDateString('en-US', { weekday: 'short' });
     const idx = periods.indexOf(p);
     const nightP = (periods[idx+1] && periods[idx+1].isDaytime===false) ? periods[idx+1] : null;
+    const uv = Math.round(omUvForDate(om, p.startTime) ?? 0);
 
     const row = document.createElement('div');
     row.className = 'wrow wrow-click';
     row.dataset.day = i;
-    row.innerHTML = `<div class="day">${label.length>7?label.slice(0,3):label}</div><div class="wi">${heroEmoji(resolveIcon(p.shortForecast,false))}</div><div class="pop">${pop}%</div><div class="bar"><i style="left:${leftPct}%;width:${widthPct}%"></i></div><div class="lo">${lo}°</div><div class="hi">${hi}°</div><div class="chev">›</div>`;
+    row.innerHTML = `<div class="day">${label}</div><div class="wi">${heroEmoji(resolveIcon(p.shortForecast,false))}</div><div class="pop">${pop}%</div><div class="uv">UV${uv}</div><div class="bar"><i style="left:${leftPct}%;width:${widthPct}%"></i></div><div class="lo">${lo}°</div><div class="hi">${hi}°</div><div class="chev">›</div>`;
 
     const detail = document.createElement('div');
     detail.className = 'daydetail';
     detail.id = 'daydetail-' + i;
 
-    row.addEventListener('click', () => toggleDayDetail(i, p, nightP, hourlyPeriods));
+    row.addEventListener('click', () => toggleDayDetail(i, p, nightP, hourlyPeriods, om));
     list.appendChild(row);
     list.appendChild(detail);
   });
 }
 
-function dayHourlyStripHTML(p, hourlyPeriods){
+function dayHourlyStripHTML(p, hourlyPeriods, om){
   if (!hourlyPeriods || !hourlyPeriods.length) return '';
   const targetDate = new Date(p.startTime).toDateString();
   const dayHours = hourlyPeriods.filter(h => new Date(h.startTime).toDateString() === targetDate);
@@ -682,12 +714,15 @@ function dayHourlyStripHTML(p, hourlyPeriods){
   const cells = dayHours.map(h => {
     const d = new Date(h.startTime);
     const icon = resolveIcon(h.shortForecast, h.isDaytime===false);
-    return `<div class="hcell"><div class="hr">${formatHourLabel(d,false)}</div><div class="hi">${heroEmoji(icon)}</div><div class="ht">${h.temperature}°</div><div class="hp">${h.probabilityOfPrecipitation?.value ?? 0}%</div></div>`;
+    const uv = Math.round(omUvForTime(om, h.startTime) ?? 0);
+    const windMph = parseWindMph(h.windSpeed);
+    const wind = windMph!=null ? `${h.windDirection||''} ${Math.round(windMph)}` : '--';
+    return `<div class="hcell"><div class="hr">${formatHourLabel(d,false)}</div><div class="hi">${heroEmoji(icon)}</div><div class="ht">${h.temperature}°</div><div class="hp">${h.probabilityOfPrecipitation?.value ?? 0}%</div><div class="huv">UV ${uv}</div><div class="hwind">${wind}</div></div>`;
   }).join('');
   return `<div class="grouphead" style="margin:10px 4px 4px;">Hourly Breakdown</div><div class="hstrip" style="margin-bottom:6px;">${cells}</div>`;
 }
 
-function toggleDayDetail(i, p, nightP, hourlyPeriods){
+function toggleDayDetail(i, p, nightP, hourlyPeriods, om){
   const detail = $('daydetail-' + i);
   const row = document.querySelector(`.wrow-click[data-day="${i}"]`);
   if (_openDayIdx === i){
@@ -704,21 +739,25 @@ function toggleDayDetail(i, p, nightP, hourlyPeriods){
   }
   const wind = p.windSpeed ? `${p.windDirection || ''} ${p.windSpeed}`.trim() : '';
   const pop = p.probabilityOfPrecipitation?.value ?? 0;
+  const uv = Math.round(omUvForDate(om, p.startTime) ?? 0);
+  const uvCat = uvCategory(uv);
   detail.innerHTML = `
     <div class="ddstats">
       <div class="ddstat"><span class="ddlabel">High</span><span class="ddval">${p.temperature}°</span></div>
       <div class="ddstat"><span class="ddlabel">Low</span><span class="ddval">${nightP ? nightP.temperature+'°' : '--'}</span></div>
       <div class="ddstat"><span class="ddlabel">Precip</span><span class="ddval">${pop}%</span></div>
+      <div class="ddstat"><span class="ddlabel">UV</span><span class="ddval">${uv} ${uvCat.label}</span></div>
       <div class="ddstat"><span class="ddlabel">Wind</span><span class="ddval">${wind || '--'}</span></div>
     </div>
     <div class="ddtext">${p.detailedForecast || p.shortForecast || ''}</div>
     ${nightP ? `<div class="ddtext ddnight"><strong>Tonight:</strong> ${nightP.detailedForecast || nightP.shortForecast || ''}</div>` : ''}
-    ${dayHourlyStripHTML(p, hourlyPeriods)}
+    ${dayHourlyStripHTML(p, hourlyPeriods, om)}
   `;
   detail.classList.add('open');
   row.classList.add('open');
   _openDayIdx = i;
 }
+
 
 
 function renderExtras(periods, om){
