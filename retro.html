@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>Retro Mode — Xavier's Weather</title>
+<meta name="description" content="Xavier's Weather, iOS 6 style. Live weather for Tuscarawas County, Ohio.">
+<meta name="theme-color" content="#1c5ba8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Xavier's Wx Retro">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --linen:#e9e6da;--leather-lt:#8a5a35;--leather:#5b3a22;--leather-dk:#38230f;--stitch:#c9a876;
+  --chrome-blue:#4f96e0;--chrome-blue-dk:#1c5ba8;--ink:#25282d;--ink-soft:#6d6d72;--hairline:#c6c6cb;
+  --red-top:#f5776a;--red-bot:#c21f1f;--green-top:#a4e07f;--green-bot:#4ea82f;
+}
+*{box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+html,body{margin:0;padding:0;}
+body{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;background:linear-gradient(160deg,#cfcbb8,#b9b49d);min-height:100vh;min-height:100dvh;}
+.appshell{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;background:var(--linen);box-shadow:0 0 40px rgba(0,0,0,.25);display:flex;flex-direction:column;position:relative;}
+.navbar{flex:0 0 auto;position:sticky;top:0;z-index:30;padding-top:env(safe-area-inset-top);background:linear-gradient(#7fb8ef 0%,#4f96e0 45%,#2571c4 46%,#1c5ba8 100%);border-bottom:1px solid #0f3a75;color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.45);overflow:hidden;}
+.navbar-inner{height:54px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.navbar::before{content:"";position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(rgba(255,255,255,.55),rgba(255,255,255,0));}
+.navbar .title{font-size:18px;font-weight:700;letter-spacing:.2px;}
+.navbar .subtitle{font-size:11px;font-weight:500;opacity:.92;margin-top:1px;}
+.navbar .navbtn{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;background:linear-gradient(#5fa3e6,#1e5fa0);border:1px solid #123f7c;box-shadow:inset 0 1px 1px rgba(255,255,255,.6),0 1px 2px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:#fff;text-decoration:none;}
+.navbar .navbtn.right{right:10px;}
+.navbar .navbtn.left{left:10px;}
+.refresh.spin{animation:spin .8s linear;}
+@keyframes spin{from{transform:translateY(-50%) rotate(0deg);}to{transform:translateY(-50%) rotate(360deg);}}
+.statusstrip{text-align:center;font-size:10.5px;color:var(--ink-soft);padding:4px 8px;background:#ded9c7;border-bottom:1px solid #cfc9b3;}
+.statusstrip.err{color:#a5150a;background:#f7dcd8;}
+.alertbar{display:none;background:linear-gradient(var(--red-top),var(--red-bot));color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.35);padding:9px 12px;font-size:12.5px;font-weight:600;border-bottom:1px solid #7a1414;position:sticky;top:54px;z-index:29;cursor:pointer;align-items:center;gap:8px;}
+.alertbar.show{display:flex;}
+.alertbar .dot{width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 6px #fff;animation:pulse 1.1s infinite ease-in-out;flex:0 0 auto;}
+.alertbar .txt{flex:1;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.content{flex:1 1 auto;padding:12px 12px 90px;background:var(--linen) repeating-linear-gradient(0deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px),repeating-linear-gradient(90deg,rgba(0,0,0,.015) 0px,rgba(0,0,0,.015) 1px,transparent 1px,transparent 3px);}
+.tab{display:none;}.tab.active{display:block;}
+.hero{border-radius:14px;background:linear-gradient(#6fb2ec,#2f79cc 55%,#1c5ba8);box-shadow:inset 0 1px 1px rgba(255,255,255,.6),inset 0 -18px 26px rgba(0,0,0,.18),0 3px 6px rgba(0,0,0,.35);color:#fff;text-align:center;padding:18px 10px 16px;position:relative;overflow:hidden;margin-bottom:14px;}
+.hero::before{content:"";position:absolute;top:0;left:0;right:0;height:45%;background:linear-gradient(rgba(255,255,255,.5),rgba(255,255,255,0));}
+.hero .loc{font-size:13px;font-weight:600;text-shadow:0 1px 1px rgba(0,0,0,.3);}
+.hero .icon{margin:6px auto 2px;height:60px;display:flex;align-items:center;justify-content:center;}
+.hero .temp{font-size:64px;font-weight:200;line-height:1;text-shadow:0 2px 3px rgba(0,0,0,.3);}
+.hero .cond{font-size:15px;font-weight:600;margin-top:2px;text-shadow:0 1px 1px rgba(0,0,0,.3);}
+.hero .hilo{font-size:12.5px;margin-top:6px;opacity:.95;}
+.hero .feels{font-size:11.5px;opacity:.85;margin-top:2px;}
+.grouphead{font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:14px 4px 4px;}
+.grouplist{border-radius:10px;overflow:hidden;box-shadow:0 1px 0 rgba(255,255,255,.7),0 1px 3px rgba(0,0,0,.15);background:#fff;}
+.row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(#ffffff,#fbfbfc);border-bottom:1px solid var(--hairline);font-size:14.5px;color:var(--ink);}
+.row:last-child{border-bottom:none;}
+.row .swatch{width:29px;height:29px;border-radius:7px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;box-shadow:inset 0 1px 1px rgba(255,255,255,.55),inset 0 -6px 8px rgba(0,0,0,.18),0 1px 1px rgba(0,0,0,.25);}
+.row .label{flex:1;}
+.row .sub{font-size:11px;color:var(--ink-soft);margin-top:1px;}
+.row .value{color:var(--ink-soft);font-weight:600;font-size:13.5px;text-align:right;}
+.sw-orange{background:linear-gradient(#ffb35c,#e2791c);}.sw-blue{background:linear-gradient(#67b3f2,#1c6fce);}
+.sw-green{background:linear-gradient(#8fdb6c,#3f9e2a);}.sw-purple{background:linear-gradient(#b48af0,#7b3ed6);}
+.sw-teal{background:linear-gradient(#68d9d0,#159089);}.sw-red{background:linear-gradient(#f28b7e,#c8362a);}
+.sw-gray{background:linear-gradient(#a9adb4,#71757c);}.sw-gold{background:linear-gradient(#f0d27a,#c99a2e);}
+.uvwrap{display:flex;align-items:center;gap:14px;padding:14px 14px 16px;}
+.gauge{width:64px;height:64px;border-radius:50%;position:relative;flex:0 0 auto;background:conic-gradient(#3fae4a 0deg 65deg,#d8e04a 65deg 130deg,#f0a63c 130deg 190deg,#e2532b 190deg 250deg,#b23fd6 250deg 360deg);box-shadow:0 1px 2px rgba(0,0,0,.25);}
+.gauge .val{position:absolute;inset:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#eee 60%,#ddd);box-shadow:inset 0 2px 3px rgba(0,0,0,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;color:var(--ink);font-size:19px;line-height:1;}
+.gauge .val small{font-size:8.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;margin-top:2px;}
+.uvtext .t1{font-size:15px;font-weight:700;}
+.uvtext .t2{font-size:12.5px;color:var(--ink-soft);margin-top:3px;line-height:1.35;}
+.hstrip{display:flex;gap:2px;overflow-x:auto;padding:12px 4px;background:#fff;border-radius:10px;box-shadow:0 1px 0 rgba(255,255,255,.7),0 1px 3px rgba(0,0,0,.15);margin-bottom:14px;}
+.hcell{flex:0 0 58px;text-align:center;padding:4px 0;border-right:1px solid #eee;}
+.hcell:last-child{border-right:none;}
+.hcell .hr{font-size:11.5px;color:var(--ink-soft);font-weight:600;}
+.hcell .hi{margin:6px auto;font-size:22px;}
+.hcell .ht{font-size:14px;font-weight:700;color:var(--ink);}
+.hcell .hp{font-size:10px;color:var(--chrome-blue-dk);font-weight:700;margin-top:2px;}
+.wrow{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(#ffffff,#fbfbfc);border-bottom:1px solid var(--hairline);font-size:14px;cursor:pointer;}
+.wrow:last-child{border-bottom:none;}
+.wrow .day{width:46px;font-weight:700;color:var(--ink);}
+.wrow .wi{flex:0 0 auto;font-size:19px;}
+.wrow .pop{width:34px;font-size:11px;color:var(--chrome-blue-dk);font-weight:700;text-align:right;}
+.wrow .bar{flex:1;height:5px;border-radius:3px;background:#e4e4e8;position:relative;box-shadow:inset 0 1px 1px rgba(0,0,0,.12);}
+.wrow .bar i{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(#f5b642,#e2791c);}
+.wrow .lo{width:26px;text-align:right;color:var(--ink-soft);font-size:13px;}
+.wrow .hi{width:30px;text-align:right;font-weight:700;color:var(--ink);font-size:13px;}
+.journal{border-radius:12px;background:linear-gradient(160deg,var(--leather-lt),var(--leather) 55%,var(--leather-dk));box-shadow:inset 0 1px 1px rgba(255,255,255,.25),inset 0 -10px 18px rgba(0,0,0,.35),0 2px 5px rgba(0,0,0,.35);padding:14px;margin-bottom:14px;position:relative;}
+.journal::before{content:"";position:absolute;inset:6px;border:1px dashed var(--stitch);border-radius:8px;opacity:.55;pointer-events:none;}
+.journal h3{margin:0 0 8px;color:#f3e3c8;font-size:13px;text-transform:uppercase;letter-spacing:.08em;text-shadow:0 1px 1px rgba(0,0,0,.5);display:flex;align-items:center;gap:6px;}
+.paper{background:#fbf6e9;background-image:repeating-linear-gradient(#fbf6e9 0 27px,#ecdfc0 27px 28px);border-radius:6px;padding:12px 12px 10px;box-shadow:0 2px 5px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.05);font-size:13.5px;color:#3a2e1c;line-height:1.5;position:relative;}
+.paper .pin{position:absolute;top:-6px;left:14px;width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff7a6b,#a5150a);box-shadow:0 2px 3px rgba(0,0,0,.4);}
+.funfact-row{display:flex;align-items:flex-start;gap:8px;}
+.funfact-row .ico{font-size:20px;flex:0 0 auto;margin-top:1px;}
+.shufflebtn{display:block;margin:10px auto 0;padding:7px 18px;border-radius:16px;background:linear-gradient(#7fb8ef,#1c5ba8);color:#fff;font-size:12.5px;font-weight:700;border:1px solid #123f7c;box-shadow:inset 0 1px 1px rgba(255,255,255,.5),0 1px 2px rgba(0,0,0,.3);text-shadow:0 -1px 0 rgba(0,0,0,.3);cursor:pointer;}
+.shufflebtn:active{filter:brightness(.92);transform:translateY(1px);}
+.indexcard{background:#fdf7e3;border-radius:4px;padding:12px;box-shadow:0 2px 5px rgba(0,0,0,.35);font-size:13px;line-height:1.5;color:#3a2e1c;border-left:6px solid #c8362a;margin-top:10px;}
+.indexcard.gray{border-left-color:#71757c;}
+.indexcard .tag{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#c8362a;margin-bottom:4px;display:block;}
+.indexcard.gray .tag{color:#5c5c62;}
+.bloglink{display:block;color:#1c5ba8;font-weight:700;font-size:13px;margin-bottom:2px;text-decoration:none;}
+.blogdate{font-size:11px;color:#8a7c5c;margin-bottom:8px;display:block;}
+.allclear{border-radius:10px;text-align:center;padding:22px 14px;background:linear-gradient(var(--green-top),var(--green-bot));color:#fff;text-shadow:0 -1px 0 rgba(0,0,0,.3);box-shadow:inset 0 1px 1px rgba(255,255,255,.5),0 2px 5px rgba(0,0,0,.25);margin-bottom:14px;}
+.allclear .big{font-size:17px;font-weight:800;}
+.allclear .small{font-size:12px;opacity:.9;margin-top:4px;}
+.radarwrap{border-radius:10px;overflow:hidden;box-shadow:0 1px 0 rgba(255,255,255,.7),0 1px 3px rgba(0,0,0,.15);margin-bottom:14px;background:#fff;}
+.radarwrap iframe{display:block;width:100%;height:280px;border:0;}
+.fbcard{border-radius:10px;background:#fff;box-shadow:0 1px 0 rgba(255,255,255,.7),0 1px 3px rgba(0,0,0,.15);padding:16px;text-align:center;margin-bottom:14px;}
+.fbcard img{width:56px;height:56px;border-radius:12px;display:block;margin:0 auto 8px;box-shadow:0 2px 4px rgba(0,0,0,.3);}
+.fbcard .name{font-weight:700;font-size:14px;color:var(--ink);}
+.fbcard .sub{font-size:12px;color:var(--ink-soft);margin:4px 0 10px;line-height:1.4;}
+.fbcard a{display:inline-block;background:#1877f2;color:#fff;font-weight:700;font-size:13px;padding:8px 22px;border-radius:16px;text-decoration:none;box-shadow:inset 0 1px 1px rgba(255,255,255,.4),0 1px 2px rgba(0,0,0,.3);}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:35;max-width:480px;margin:0 auto;height:58px;padding-bottom:env(safe-area-inset-bottom);background:linear-gradient(160deg,#4a3626,#2a1c12);display:flex;border-top:1px solid #1a1108;}
+.tabbar::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:rgba(255,255,255,.15);}
+.tabitem{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:#c9b48c;opacity:.62;position:relative;background:none;border:none;font-family:inherit;text-decoration:none;}
+.tabitem .glyph{font-size:19px;filter:drop-shadow(0 -1px 0 rgba(0,0,0,.6));}
+.tabitem .lbl{font-size:9.5px;font-weight:700;letter-spacing:.02em;text-shadow:0 -1px 0 rgba(0,0,0,.5);}
+.tabitem.active{opacity:1;color:#fff;}
+.tabitem.active .glyph{color:#6fb2ec;text-shadow:0 0 8px rgba(111,178,236,.8);}
+.tabitem .badge{position:absolute;top:2px;right:calc(50% - 22px);background:linear-gradient(#f5776a,#c21f1f);color:#fff;font-size:9px;font-weight:800;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;box-shadow:0 1px 2px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.4);border:1px solid #7a1414;}
+footer.credit{text-align:center;font-size:10px;color:var(--ink-soft);opacity:.8;margin-top:6px;padding:0 6px;}
+footer.credit a{color:var(--chrome-blue-dk);}
+::-webkit-scrollbar{width:0;height:0;}
+
+</style>
+</head>
+<body>
+
+<div class="appshell">
+
+  <div class="navbar">
+    <div class="navbar-inner">
+      <a class="navbtn left" href="/" title="Exit Retro Mode">⏻</a>
+      <div class="title">Xavier's Weather</div>
+      <div class="subtitle">Retro Mode · Tuscarawas County, OH</div>
+      <button class="navbtn right refresh" id="refreshBtn" title="Refresh" aria-label="Refresh">⟳</button>
+    </div>
+  </div>
+
+  <div class="statusstrip" id="statusStrip">Loading live conditions…</div>
+
+  <div class="alertbar" id="alertbar">
+    <span class="dot"></span>
+    <span class="txt" id="alerttext">Loading alerts…</span>
+  </div>
+
+  <div class="content">
+
+    <!-- NOW -->
+    <section class="tab active" id="tab-now">
+      <div class="hero">
+        <div class="loc">New Philadelphia, OH</div>
+        <div class="icon" id="heroIcon"></div>
+        <div class="temp" id="heroTemp">--°</div>
+        <div class="cond" id="heroCond">Loading…</div>
+        <div class="hilo" id="heroHiLo">H: --°&nbsp;&nbsp;&nbsp;L: --°</div>
+        <div class="feels" id="heroFeels">Feels like --°</div>
+      </div>
+
+      <div class="grouphead">UV Index</div>
+      <div class="grouplist">
+        <div class="uvwrap">
+          <div class="gauge"><div class="val" id="uvVal">--<small id="uvSmall">—</small></div></div>
+          <div class="uvtext"><div class="t1" id="uvT1">—</div><div class="t2" id="uvT2">Waiting for data…</div></div>
+        </div>
+      </div>
+
+      <div class="grouphead">Conditions</div>
+      <div class="grouplist">
+        <div class="row"><div class="swatch sw-blue">💧</div><div class="label">Humidity</div><div class="value" id="cHumidity">--%</div></div>
+        <div class="row"><div class="swatch sw-teal">🌬️</div><div class="label">Wind</div><div class="value" id="cWind">-- --</div></div>
+        <div class="row"><div class="swatch sw-gray">📊</div><div class="label">Pressure</div><div class="value" id="cPressure">-- in</div></div>
+        <div class="row"><div class="swatch sw-purple">🌡️</div><div class="label">Dew Point</div><div class="value" id="cDew">--°</div></div>
+        <div class="row"><div class="swatch sw-gold">👁️</div><div class="label">Visibility</div><div class="value" id="cVis">-- mi</div></div>
+      </div>
+
+      <div class="grouphead">Air &amp; Sky</div>
+      <div class="grouplist">
+        <div class="row"><div class="swatch sw-green">🍃</div><div class="label">Air Quality<div class="sub" id="cAQISub"></div></div><div class="value" id="cAQI">Loading…</div></div>
+        <div class="row"><div class="swatch sw-orange">🌼</div><div class="label">Pollen<div class="sub" id="ePollenSub"></div></div><div class="value" id="ePollen">--</div></div>
+        <div class="row"><div class="swatch sw-blue">🌅</div><div class="label">Sunrise</div><div class="value" id="cSunrise">--:--</div></div>
+        <div class="row"><div class="swatch sw-purple">🌇</div><div class="label">Sunset</div><div class="value" id="cSunset">--:--</div></div>
+      </div>
+
+      <div class="grouphead">More</div>
+      <div class="grouplist">
+        <div class="row"><div class="swatch sw-blue">🌧️</div><div class="label">Precipitation<div class="sub" id="ePrecipSub"></div></div><div class="value" id="ePrecip">--</div></div>
+        <div class="row"><div class="swatch sw-gray">❄️</div><div class="label">Snow</div><div class="value" id="eSnow">--</div></div>
+        <div class="row"><div class="swatch sw-purple">🌙</div><div class="label">Moon Phase<div class="sub" id="eMoonSub"></div></div><div class="value" id="eMoon">--</div></div>
+        <div class="row"><div class="swatch sw-gold">📈</div><div class="label">Vs. Normal<div class="sub" id="eHistSub"></div></div><div class="value" id="eHist">--</div></div>
+        <div class="row"><div class="swatch sw-teal">🌡️</div><div class="label">Feels-Like Trend<div class="sub" id="eFeelsSub"></div></div><div class="value" id="eFeels">--</div></div>
+        <div class="row"><div class="swatch sw-green">🏃</div><div class="label">Outdoor Rating<div class="sub" id="eOutdoorSub"></div></div><div class="value" id="eOutdoor">--</div></div>
+        <div class="row"><div class="swatch sw-orange">🎉</div><div class="label">Weekend Outlook<div class="sub" id="eWeekendSub"></div></div><div class="value" id="eWeekend">--</div></div>
+      </div>
+
+      <div class="grouphead">Live Radar</div>
+      <div class="radarwrap">
+        <iframe src="https://embed.windy.com/embed2.html?lat=40.49&lon=-81.44&zoom=7&overlay=radar" title="Live Radar" loading="lazy" allow="geolocation 'none'; microphone 'none'; camera 'none'"></iframe>
+      </div>
+
+      <div class="fbcard">
+        <div class="name">📘 Xavier's Weather on Facebook</div>
+        <div class="sub">Live updates, storm alerts, and weather discussion for Tuscarawas County.</div>
+        <a href="https://www.facebook.com/xaviersweather" target="_blank" rel="noopener">Follow Page</a>
+      </div>
+    </section>
+
+    <!-- FORECAST -->
+    <section class="tab" id="tab-forecast">
+      <div class="grouphead">Next 12 Hours</div>
+      <div class="hstrip" id="hstrip"><div style="padding:12px;color:#999;font-size:12px;">Loading hourly forecast…</div></div>
+      <div class="grouphead">7‑Day Outlook</div>
+      <div class="grouplist" id="weeklist"><div class="row"><div class="label" style="color:#999;font-size:12.5px;">Loading forecast…</div></div></div>
+    </section>
+
+    <!-- ALMANAC -->
+    <section class="tab" id="tab-almanac">
+      <div class="journal">
+        <h3>📖 On This Day</h3>
+        <div class="paper"><span class="pin"></span><span id="otd">Loading…</span></div>
+      </div>
+      <div class="journal">
+        <h3>💡 Fun Fact</h3>
+        <div class="paper funfact-row"><div class="ico" id="ffico">🌩️</div><div id="fftext">Loading…</div></div>
+        <button class="shufflebtn" id="shuffleBtn">🔀 Another Fact</button>
+      </div>
+      <div class="journal">
+        <h3>⛑️ Storm Safety</h3>
+        <div class="indexcard"><span class="tag" id="stormTag">Safety Tip</span><span id="stormText">Loading…</span></div>
+        <button class="shufflebtn" id="stormBtn">🔀 Next Tip</button>
+      </div>
+      <div class="journal">
+        <h3>📰 From the Blog</h3>
+        <div class="paper" id="blogBox">Loading recent posts…</div>
+      </div>
+      <footer class="credit">
+        Xavier's Weather · Retro Mode · Data: NWS (Pittsburgh/PBZ) · Open‑Meteo · AirNow · <span id="footerYear"></span> · <a href="/">Exit Retro Mode</a>
+      </footer>
+    </section>
+
+  </div>
+
+  <div class="tabbar">
+    <a class="tabitem active" data-intab="now" href="#now"><div class="glyph">☀️</div><div class="lbl">Now</div><span class="badge" id="alertBadge" style="display:none">0</span></a>
+    <a class="tabitem" data-intab="forecast" href="#forecast"><div class="glyph">📅</div><div class="lbl">Forecast</div></a>
+    <a class="tabitem" href="cameras.html"><div class="glyph">📷</div><div class="lbl">Cameras</div></a>
+    <a class="tabitem" data-intab="almanac" href="#almanac"><div class="glyph">📖</div><div class="lbl">Almanac</div></a>
+    <a class="tabitem" href="about.html"><div class="glyph">ℹ️</div><div class="lbl">About</div></a>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// CONFIG — Tuscarawas County, Ohio (mirrors production config)
+// ============================================================
+const CONFIG = {
+  lat: 40.4756, lon: -81.4467,
+  nwsZone: 'OHZ039', nwsCounty: 'OHC157',
+  airnowZip: '44663', airnowKey: '6872DC25-7E4F-463D-BD97-0F691E4335EC',
+  blogFeed: 'https://xaviersweather.blogspot.com/feeds/posts/default?alt=json&max-results=5'
+};
+
+const HEADERS = { Accept: 'application/geo+json' };
+const FORECAST_URL = 'https://api.weather.gov/gridpoints/PBZ/28,62/forecast';
+const FORECAST_HOURLY_URL = 'https://api.weather.gov/gridpoints/PBZ/28,62/forecast/hourly';
+const STATION_OBS_URL = 'https://api.weather.gov/stations/KPHD/observations?limit=5';
+
+// Open-Meteo is SUPPLEMENTAL ONLY: UV index, sunrise/sunset, precip/snow totals,
+// and a fallback for current conditions if the NWS station observation is stale.
+const OPEN_METEO_URL =
+  `https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.lat}&longitude=${CONFIG.lon}` +
+  `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,dew_point_2m,surface_pressure,visibility,weather_code,is_day,uv_index` +
+  `&hourly=uv_index,precipitation,apparent_temperature` +
+  `&daily=sunrise,sunset,uv_index_max,precipitation_sum,snowfall_sum,precipitation_hours` +
+  `&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=America%2FNew_York`;
+
+const DAILY_NORM_HIGHS=[36.7,36.6,36.4,36.2,36.1,36,35.8,35.7,35.6,35.5,35.4,35.3,35.3,35.2,35.2,35.2,35.2,35.2,35.3,35.4,35.5,35.6,35.7,35.8,36,36.2,36.3,36.5,36.7,36.9,37.1,37.3,37.5,37.7,37.9,38,38.2,38.3,38.5,38.6,38.7,38.8,38.8,38.9,38.9,38.9,39,39.1,39.3,39.5,39.8,40.2,40.5,41,41.5,42,42.5,43.1,43.6,44.2,44.8,45.4,45.9,46.5,47,47.5,47.9,48.4,48.7,49,49.3,49.5,49.7,49.8,49.8,49.8,49.9,50.1,50.3,50.6,50.9,51.3,51.8,52.3,52.8,53.3,53.9,54.5,55.2,55.8,56.4,57.1,57.7,58.3,58.8,59.4,59.9,60.4,60.8,61.1,61.5,61.7,61.9,62,62.1,62.1,62.2,62.3,62.4,62.7,62.9,63.3,63.6,64,64.5,64.9,65.4,66,66.5,67,67.6,68.1,68.7,69.2,69.7,70.2,70.7,71.1,71.5,71.8,72.1,72.4,72.5,72.7,72.8,72.8,72.8,72.9,73,73.2,73.4,73.6,73.9,74.2,74.5,74.9,75.2,75.7,76.1,76.5,76.9,77.4,77.8,78.2,78.7,79,79.4,79.8,80.1,80.4,80.6,80.9,81,81.2,81.2,81.3,81.3,81.3,81.4,81.4,81.5,81.6,81.7,81.8,81.9,82,82.2,82.3,82.5,82.7,82.8,83,83.2,83.3,83.5,83.6,83.8,83.9,84.1,84.2,84.3,84.4,84.5,84.5,84.6,84.6,84.6,84.6,84.6,84.6,84.5,84.5,84.5,84.4,84.4,84.3,84.2,84.2,84.1,84,83.9,83.8,83.8,83.7,83.6,83.5,83.4,83.4,83.3,83.2,83.2,83.1,83.1,83.1,83,83,83,83,83,82.9,82.8,82.7,82.6,82.4,82.1,81.9,81.6,81.3,81,80.7,80.3,80,79.6,79.3,78.9,78.6,78.3,77.9,77.6,77.3,77.1,76.8,76.6,76.5,76.3,76.2,76.1,76.1,76.1,76,75.9,75.7,75.5,75.1,74.8,74.4,73.9,73.4,72.8,72.3,71.7,71.1,70.4,69.8,69.2,68.5,67.9,67.3,66.8,66.3,65.8,65.3,64.9,64.6,64.3,64.1,63.9,63.8,63.8,63.8,63.7,63.5,63.3,63,62.6,62.2,61.8,61.3,60.7,60.2,59.6,58.9,58.3,57.7,57,56.4,55.7,55.1,54.5,54,53.5,53,52.6,52.2,51.9,51.6,51.4,51.3,51.2,51.2,51.1,51,50.8,50.5,50.2,49.8,49.4,48.9,48.4,47.8,47.2,46.6,45.9,45.3,44.6,44,43.3,42.7,42.1,41.5,41,40.5,40,39.6,39.2,38.9,38.7,38.5,38.4,38.4,38.4,38.4,38.3,38.3,38.2,38.1,38,37.9,37.8,37.6,37.5,37.4,37.2,37,36.9];
+const DAILY_NORM_LOWS=[22.2,22,21.7,21.5,21.3,21.1,21,20.8,20.6,20.5,20.4,20.3,20.2,20.1,20.1,20.1,20.1,20.1,20.2,20.2,20.3,20.4,20.5,20.6,20.7,20.8,20.9,21.1,21.2,21.3,21.5,21.6,21.8,21.9,22,22.2,22.3,22.4,22.5,22.6,22.6,22.7,22.8,22.8,22.8,22.8,22.9,22.9,23.1,23.3,23.5,23.7,24,24.3,24.7,25.1,25.4,25.9,26.3,26.7,27.1,27.5,28,28.4,28.7,29.1,29.4,29.7,30,30.2,30.4,30.6,30.7,30.8,30.8,30.8,30.9,31.1,31.2,31.5,31.8,32.1,32.5,32.9,33.4,33.9,34.4,34.9,35.5,36,36.6,37.1,37.6,38.2,38.7,39.1,39.6,40,40.3,40.7,40.9,41.2,41.3,41.4,41.5,41.5,41.6,41.7,41.8,42,42.3,42.6,43,43.4,43.8,44.3,44.7,45.2,45.8,46.3,46.8,47.4,47.9,48.4,48.9,49.4,49.8,50.2,50.6,50.9,51.2,51.5,51.7,51.8,51.9,51.9,51.9,52,52.1,52.3,52.5,52.8,53.1,53.4,53.8,54.2,54.6,55,55.5,56,56.4,56.9,57.4,57.8,58.3,58.7,59.1,59.5,59.9,60.2,60.5,60.7,60.9,61,61.1,61.2,61.2,61.2,61.3,61.3,61.4,61.5,61.7,61.8,62,62.1,62.3,62.5,62.7,62.9,63.1,63.4,63.6,63.8,64,64.2,64.4,64.6,64.7,64.9,65,65.1,65.2,65.3,65.4,65.4,65.4,65.4,65.4,65.4,65.3,65.3,65.3,65.2,65.2,65.1,65,65,64.9,64.8,64.8,64.7,64.6,64.5,64.5,64.4,64.3,64.3,64.2,64.1,64.1,64,64,64,63.9,63.9,63.9,63.9,63.9,63.8,63.7,63.6,63.4,63.2,63,62.7,62.4,62.1,61.8,61.4,61,60.7,60.3,59.9,59.5,59.2,58.8,58.5,58.1,57.8,57.6,57.3,57.1,56.9,56.7,56.6,56.5,56.5,56.5,56.4,56.3,56.1,55.9,55.6,55.2,54.8,54.4,53.9,53.4,52.8,52.2,51.7,51.1,50.4,49.8,49.2,48.7,48.1,47.6,47.1,46.6,46.2,45.8,45.5,45.2,45,44.8,44.7,44.7,44.7,44.6,44.5,44.3,44.1,43.8,43.5,43.2,42.8,42.4,42,41.5,41,40.6,40.1,39.6,39.1,38.6,38.2,37.7,37.3,36.9,36.5,36.2,35.9,35.7,35.5,35.4,35.3,35.2,35.2,35.1,35,34.9,34.6,34.4,34,33.7,33.3,32.8,32.4,31.9,31.3,30.8,30.3,29.7,29.2,28.6,28.1,27.6,27.1,26.6,26.2,25.8,25.5,25.2,24.9,24.8,24.6,24.5,24.5,24.5,24.5,24.4,24.3,24.2,24.1,24,23.8,23.6,23.5,23.3,23.1,22.9,22.6,22.4];
+
+function $(id){ return document.getElementById(id); }
+
+function degToCompass(deg){
+  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  return dirs[Math.round(deg / 22.5) % 16];
+}
+function formatClock(d){
+  let h = d.getHours(), m = d.getMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12; if (h === 0) h = 12;
+  return h + ':' + String(m).padStart(2,'0') + ' ' + ampm;
+}
+function formatHourLabel(d, isNow){
+  if (isNow) return 'Now';
+  let h = d.getHours();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12; if (h === 0) h = 12;
+  return h + ampm;
+}
+function formatTimeFromISO(iso){ return iso ? formatClock(new Date(iso)) : '--:--'; }
+function dayOfYear(d){ const start = new Date(d.getFullYear(),0,0); return Math.floor((d-start)/86400000)-1; }
+function cToF(c){ return c==null ? null : c*9/5+32; }
+function paToInHg(pa){ return pa==null ? null : pa/3386.39; }
+function metersToMiles(m){ return m==null ? null : m/1609.34; }
+function toMPH(v, unitCode){
+  if (v==null) return null;
+  if (unitCode && unitCode.includes('km_h')) return v*0.621371;
+  return v*2.23694;
+}
+function parseWindMph(str){
+  if (!str) return null;
+  const m = String(str).match(/(\d+(\.\d+)?)/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+function resolveIcon(shortForecast, isNight){
+  const f = (shortForecast||'').toLowerCase();
+  if (f.includes('thunder') || f.includes('storm')) return 'storm';
+  if (f.includes('snow') || f.includes('blizzard') || f.includes('flurr')) return 'snow';
+  if (f.includes('sleet') || f.includes('wintry') || f.includes('freezing')) return 'snow';
+  if (f.includes('rain') || f.includes('shower') || f.includes('drizzle')) return 'rain';
+  if (f.includes('fog') || f.includes('mist') || f.includes('haze')) return 'fog';
+  if (f.includes('overcast') || f.includes('mostly cloudy') || f.includes('cloudy')) return 'cloudy';
+  if (f.includes('partly') || f.includes('mostly sunny') || f.includes('mostly clear')) return isNight ? 'moon' : 'partly';
+  if (f.includes('sunny') || f.includes('clear') || f.includes('fair')) return isNight ? 'moon' : 'sun';
+  return 'cloudy';
+}
+function outlookCat(shortForecast){
+  const key = resolveIcon(shortForecast, false);
+  return key==='storm'?'storm':key==='snow'?'snow':key==='rain'?'rain':key==='fog'?'fog':key==='cloudy'?'cloudy':key==='partly'?'partly':'clear';
+}
+function uvCategory(uv){
+  if (uv >= 11) return { label:'Extreme', color:'#8b3fd6' };
+  if (uv >= 8) return { label:'Very High', color:'#e2532b' };
+  if (uv >= 6) return { label:'High', color:'#f0a63c' };
+  if (uv >= 3) return { label:'Moderate', color:'#d8e04a' };
+  return { label:'Low', color:'#3fae4a' };
+}
+function aqiCategory(aqi){
+  if (aqi<=50) return {label:'Good'};
+  if (aqi<=100) return {label:'Moderate'};
+  if (aqi<=150) return {label:'Unhealthy (Sens.)'};
+  if (aqi<=200) return {label:'Unhealthy'};
+  if (aqi<=300) return {label:'Very Unhealthy'};
+  return {label:'Hazardous'};
+}
+function seasonalPollen(){
+  const month = new Date().getMonth()+1, d = new Date().getDate();
+  if (month===1||month===2) return {type:'Dormant season',level:'None'};
+  if (month===3) return {type:'Tree pollen season beginning',level:d<15?'Low':'Moderate'};
+  if (month===4) return {type:'Tree pollen — Oak, Birch, Ash',level:'High'};
+  if (month===5) return {type:d<15?'Tree pollen, Grass beginning':'Grass pollen rising',level:d<15?'High':'Moderate'};
+  if (month===6) return {type:'Grass pollen — peak season',level:'High'};
+  if (month===7) return {type:'Grass pollen fading',level:d<15?'Moderate':'Low'};
+  if (month===8) return {type:d<15?'Weed pollen rising':'Ragweed season beginning',level:d<15?'Low':'Moderate'};
+  if (month===9) return {type:'Ragweed pollen — peak season',level:'High'};
+  if (month===10) return {type:'Ragweed fading',level:d<15?'Moderate':'Low'};
+  return {type:'Dormant season',level:'None'};
+}
+function moonPhase(){
+  const known = new Date('2000-01-06T18:14:00Z'), now = new Date();
+  const diff = (now-known)/86400000, cycle = 29.53058867;
+  const phase = ((diff%cycle)+cycle)%cycle, pct = phase/cycle;
+  let daysToFull = 14.765294335 - phase; if (daysToFull<0) daysToFull += cycle;
+  const fullStr = new Date(now.getTime()+daysToFull*86400000).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const rounded = Math.round(daysToFull);
+  const nextFull = rounded===0?'Full moon is today!':rounded===1?'Full moon tomorrow':`Full moon in ${rounded} days (${fullStr})`;
+  let info;
+  if (pct<.03||pct>.97) info={name:'New Moon',icon:'🌑'};
+  else if (pct<.22) info={name:'Waxing Crescent',icon:'🌒'};
+  else if (pct<.28) info={name:'First Quarter',icon:'🌓'};
+  else if (pct<.47) info={name:'Waxing Gibbous',icon:'🌔'};
+  else if (pct<.53) info={name:'Full Moon',icon:'🌕'};
+  else if (pct<.72) info={name:'Waning Gibbous',icon:'🌖'};
+  else if (pct<.78) info={name:'Last Quarter',icon:'🌗'};
+  else info={name:'Waning Crescent',icon:'🌘'};
+  info.nextFull = nextFull;
+  return info;
+}
+
+function heroIconSVG(key){
+  const icons = {
+    sun:`<svg width="66" height="60" viewBox="0 0 66 60"><defs><radialGradient id="s1" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fff6c8"/><stop offset="55%" stop-color="#ffd24a"/><stop offset="100%" stop-color="#f2a30f"/></radialGradient></defs><circle cx="33" cy="30" r="24" fill="url(#s1)"/><ellipse cx="26" cy="20" rx="11" ry="7" fill="#fff" opacity=".5"/></svg>`,
+    moon:`<svg width="60" height="60" viewBox="0 0 60 60"><defs><radialGradient id="m1" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#fdfdf5"/><stop offset="60%" stop-color="#e2e2d0"/><stop offset="100%" stop-color="#b7b7a0"/></radialGradient></defs><path d="M40 6c-14 0-25 11-25 25S26 56 40 56c5 0 9.7-1.4 13.6-3.9-10-1-18-9.6-18-20.5S43.6 12 53.6 10.9C49.7 8.4 45 7 40 6z" fill="url(#m1)"/></svg>`,
+    partly:`<svg width="72" height="58" viewBox="0 0 72 58"><defs><radialGradient id="p1" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fff6c8"/><stop offset="55%" stop-color="#ffd24a"/><stop offset="100%" stop-color="#f2a30f"/></radialGradient><linearGradient id="p2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#dfe6ee"/></linearGradient></defs><circle cx="20" cy="20" r="15" fill="url(#p1)"/><ellipse cx="14" cy="14" rx="7" ry="5" fill="#fff" opacity=".5"/><path d="M18 46c-9 0-16-6-16-13 0-6 5-11 12-12 2.5-6 9.5-10 17-8 6 1.8 10 7 10.3 12.7 6 .7 10.5 5.2 10.5 10.6 0 6.3-6 12-13 12H18z" fill="url(#p2)" stroke="#c7d0da" stroke-width=".5"/></svg>`,
+    cloudy:`<svg width="72" height="52" viewBox="0 0 72 52"><defs><linearGradient id="c1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e9edf1"/><stop offset="100%" stop-color="#c3ccd6"/></linearGradient></defs><path d="M20 44c-9 0-16-6-16-13 0-6.5 5.3-11.7 12-12.2C18.5 11 26 6 34 8.5 41 10.5 45 16 45 22.5c6 .8 10.5 5.4 10.5 10.9 0 6.4-6 12.6-13 12.6H20z" fill="url(#c1)" stroke="#a9b4c0" stroke-width=".5"/></svg>`,
+    fog:`<svg width="72" height="50" viewBox="0 0 72 50"><defs><linearGradient id="f1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e9edf1"/><stop offset="100%" stop-color="#c3ccd6"/></linearGradient></defs><path d="M18 26c-8 0-14-5-14-11 0-5.5 4.6-10 10.5-10.5C16.5 8 24-2 34 2c5 2 8 6 8.5 10.5 5.3.7 9.3 4.6 9.3 9.3 0 5.4-5 10.2-11 10.2H18z" fill="url(#f1)"/><rect x="6" y="34" width="60" height="4" rx="2" fill="#b9c3cf"/><rect x="12" y="42" width="48" height="4" rx="2" fill="#c9d1db"/></svg>`,
+    rain:`<svg width="72" height="58" viewBox="0 0 72 58"><defs><linearGradient id="r1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#dfe6ee"/><stop offset="100%" stop-color="#aab6c2"/></linearGradient></defs><path d="M20 34c-9 0-16-6-16-13 0-6.5 5.3-11.7 12-12.2C18.5 1 26-4 34-1.5 41 .5 45 6 45 12.5c6 .8 10.5 5.4 10.5 10.9 0 6.4-6 12.6-13 12.6H20z" fill="url(#r1)" transform="translate(0,4)"/><g stroke="#3f7fd6" stroke-width="3" stroke-linecap="round"><line x1="20" y1="44" x2="16" y2="54"/><line x1="34" y1="44" x2="30" y2="54"/><line x1="48" y1="44" x2="44" y2="54"/></g></svg>`,
+    storm:`<svg width="72" height="58" viewBox="0 0 72 58"><defs><linearGradient id="st1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8c98a6"/><stop offset="100%" stop-color="#565f6b"/></linearGradient></defs><path d="M20 32c-9 0-16-6-16-13 0-6.5 5.3-11.7 12-12.2C18.5-1 26-6 34-3.5 41-1.5 45 4 45 10.5c6 .8 10.5 5.4 10.5 10.9 0 6.4-6 12.6-13 12.6H20z" fill="url(#st1)" transform="translate(0,6)"/><polygon points="38,36 28,52 36,52 30,66 48,46 39,46" fill="#ffd24a" stroke="#e2a300" stroke-width="1"/></svg>`,
+    snow:`<svg width="72" height="58" viewBox="0 0 72 58"><defs><linearGradient id="sn1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eef3f8"/><stop offset="100%" stop-color="#cdd8e2"/></linearGradient></defs><path d="M20 32c-9 0-16-6-16-13 0-6.5 5.3-11.7 12-12.2C18.5-1 26-6 34-3.5 41-1.5 45 4 45 10.5c6 .8 10.5 5.4 10.5 10.9 0 6.4-6 12.6-13 12.6H20z" fill="url(#sn1)" transform="translate(0,6)"/><g fill="#bcd6f0"><circle cx="18" cy="48" r="3"/><circle cx="34" cy="52" r="3"/><circle cx="48" cy="48" r="3"/></g></svg>`
+  };
+  return icons[key] || icons.cloudy;
+}
+function heroEmoji(key){
+  return { sun:'☀️', moon:'🌙', partly:'🌤️', cloudy:'☁️', fog:'🌫️', rain:'🌧️', storm:'⛈️', snow:'❄️' }[key] || '☁️';
+}
+
+let lastOM = null, lastAQI = null, lastPeriods = null;
+
+function setStatus(text, isErr){
+  const el = $('statusStrip');
+  el.textContent = text;
+  el.classList.toggle('err', !!isErr);
+}
+
+// ============================================================
+// LOAD: NWS is primary. Open-Meteo is fetched alongside as a
+// supplement (UV, sun times, precip/snow totals) and as a
+// fallback if the NWS station observation is stale/missing.
+// ============================================================
+async function loadWeather(){
+  setStatus('Updating…');
+  try{
+    const [forecastRes, obsRes, hourlyRes] = await Promise.all([
+      fetch(FORECAST_URL, { headers: HEADERS }),
+      fetch(STATION_OBS_URL, { headers: HEADERS }),
+      fetch(FORECAST_HOURLY_URL, { headers: HEADERS })
+    ]);
+
+    let obs = null, obsAgeMins = null;
+    if (obsRes.ok){
+      const j = await obsRes.json();
+      for (const f of j.features||[]){
+        const p = f.properties||{};
+        if (p.temperature?.value != null){ obs = p; break; }
+      }
+      if (!obs && j.features?.length) obs = j.features[0].properties || null;
+    }
+    if (obs?.timestamp) obsAgeMins = Math.round((Date.now()-new Date(obs.timestamp).getTime())/60000);
+    const obsStale = obs==null || (obsAgeMins!=null && obsAgeMins>90);
+
+    let om = null;
+    try{
+      const omRes = await fetch(OPEN_METEO_URL);
+      if (omRes.ok) om = await omRes.json();
+    } catch(e){ console.warn('Open-Meteo (supplemental) fetch failed:', e); }
+    lastOM = om;
+
+    let hourlyPeriods = [];
+    if (hourlyRes.ok) hourlyPeriods = (await hourlyRes.json()).properties?.periods || [];
+
+    if (!forecastRes.ok) throw new Error('NWS forecast unavailable (' + forecastRes.status + ')');
+    const periods = (await forecastRes.json()).properties?.periods || [];
+    if (!periods.length) throw new Error('No NWS forecast periods returned.');
+    lastPeriods = periods;
+
+    renderCurrent(periods, obs, obsStale, om, hourlyPeriods[0] || null);
+    renderHourly(hourlyPeriods);
+    renderDaily(periods);
+    renderExtras(periods, om);
+    renderOutdoorRating(periods, om, hourlyPeriods);
+    renderWeekend(periods);
+
+    setStatus('Updated ' + formatClock(new Date()) + (obsStale ? ' · KPHD offline, using backup data' : ''));
+  } catch(err){
+    console.error('loadWeather failed', err);
+    setStatus('⚠ Unable to refresh live conditions — will retry automatically', true);
+  }
+}
+
+function renderCurrent(periods, obs, obsStale, om, hourlyNow){
+  const cur = periods[0];
+  const isNight = cur.isDaytime === false;
+  const omCur = om?.current;
+
+  const tempF = (!obsStale && obs?.temperature?.value!=null) ? Math.round(cToF(obs.temperature.value))
+    : (hourlyNow?.temperature ?? cur.temperature);
+  $('heroTemp').textContent = tempF + '°';
+
+  const condText = (!obsStale && obs?.textDescription) ? obs.textDescription : (hourlyNow?.shortForecast || cur.shortForecast || '');
+  $('heroCond').textContent = condText;
+  $('heroIcon').innerHTML = heroIconSVG(resolveIcon(condText, isNight));
+
+  const dayP = periods.find(p => p.isDaytime !== false);
+  const nightP = periods.find(p => p.isDaytime === false);
+  $('heroHiLo').innerHTML = 'H: ' + (dayP ? dayP.temperature : cur.temperature) + '°&nbsp;&nbsp;&nbsp;L: ' + (nightP ? nightP.temperature : '--') + '°';
+
+  const feelsF = (!obsStale && obs) ? (obs.heatIndex?.value!=null ? Math.round(cToF(obs.heatIndex.value)) : obs.windChill?.value!=null ? Math.round(cToF(obs.windChill.value)) : (omCur?.apparent_temperature!=null?Math.round(omCur.apparent_temperature):null))
+    : (omCur?.apparent_temperature!=null ? Math.round(omCur.apparent_temperature) : null);
+  const windMphNow = (!obsStale && obs?.windSpeed?.value!=null) ? toMPH(obs.windSpeed.value, obs.windSpeed.unitCode||'') : (omCur?.wind_speed_10m ?? parseWindMph(hourlyNow?.windSpeed));
+  const windDirNow = (!obsStale && obs?.windDirection?.value!=null) ? degToCompass(obs.windDirection.value) : (omCur?.wind_direction_10m!=null ? degToCompass(omCur.wind_direction_10m) : (hourlyNow?.windDirection||''));
+  $('heroFeels').textContent = 'Feels like ' + (feelsF!=null?feelsF+'°':'--°') + ' · Wind ' + windDirNow + ' ' + (windMphNow!=null?Math.round(windMphNow):'--') + ' mph';
+
+  $('cHumidity').textContent = (!obsStale && obs?.relativeHumidity?.value!=null) ? Math.round(obs.relativeHumidity.value)+'%' : (omCur?.relative_humidity_2m!=null ? Math.round(omCur.relative_humidity_2m)+'%' : '--%');
+  $('cWind').textContent = windDirNow + ' ' + (windMphNow!=null?Math.round(windMphNow):'--') + ' mph';
+  const gustMph = (!obsStale && obs?.windGust?.value!=null) ? toMPH(obs.windGust.value, obs.windGust.unitCode||'') : omCur?.wind_gusts_10m;
+  if (gustMph!=null && Math.round(gustMph) >= 1) $('cWind').textContent += ' (gust ' + Math.round(gustMph) + ')';
+
+  const pressureInHg = (!obsStale && obs?.barometricPressure?.value!=null) ? paToInHg(obs.barometricPressure.value) : (omCur?.surface_pressure!=null ? omCur.surface_pressure/33.8639 : null);
+  $('cPressure').textContent = pressureInHg!=null ? pressureInHg.toFixed(2)+' in' : '-- in';
+
+  const dewF = (!obsStale && obs?.dewpoint?.value!=null) ? Math.round(cToF(obs.dewpoint.value)) : (omCur?.dew_point_2m!=null?Math.round(omCur.dew_point_2m):null);
+  $('cDew').textContent = dewF!=null ? dewF+'°' : '--°';
+
+  const visMi = (!obsStale && obs?.visibility?.value!=null) ? metersToMiles(obs.visibility.value) : (omCur?.visibility!=null?metersToMiles(omCur.visibility):null);
+  $('cVis').textContent = visMi!=null ? visMi.toFixed(1)+' mi' : '-- mi';
+
+  document.title = tempF + '° · Retro Mode · Xavier\'s Weather';
+}
+
+function renderHourly(hourlyPeriods){
+  if (!hourlyPeriods.length) return;
+  const strip = $('hstrip'); strip.innerHTML = '';
+  for (let i=0; i<Math.min(12, hourlyPeriods.length); i++){
+    const p = hourlyPeriods[i];
+    const d = new Date(p.startTime);
+    const isNow = i===0;
+    const icon = resolveIcon(p.shortForecast, p.isDaytime===false);
+    const cell = document.createElement('div');
+    cell.className = 'hcell';
+    cell.innerHTML = `<div class="hr">${formatHourLabel(d,isNow)}</div><div class="hi">${heroEmoji(icon)}</div><div class="ht">${p.temperature}°</div><div class="hp">${p.probabilityOfPrecipitation?.value ?? 0}%</div>`;
+    strip.appendChild(cell);
+  }
+}
+
+function renderDaily(periods){
+  const dayPeriods = periods.filter(p => p.isDaytime !== false).slice(0,7);
+  if (!dayPeriods.length) return;
+  const highs = dayPeriods.map(p=>p.temperature);
+  const lows = dayPeriods.map(p => {
+    const idx = periods.indexOf(p);
+    const night = periods[idx+1];
+    return (night && night.isDaytime===false) ? night.temperature : null;
+  });
+  const validLows = lows.filter(l=>l!=null);
+  const minLo = validLows.length ? Math.min(...validLows) : Math.min(...highs)-15;
+  const maxHi = Math.max(...highs);
+  const span = Math.max(1, maxHi-minLo);
+  const list = $('weeklist'); list.innerHTML = '';
+  dayPeriods.forEach((p,i) => {
+    const hi = p.temperature, lo = lows[i] ?? (hi-15);
+    const leftPct = ((lo-minLo)/span)*70, widthPct = ((hi-lo)/span)*70+10;
+    const pop = p.probabilityOfPrecipitation?.value ?? 0;
+    const label = i===0 ? 'Today' : p.name.replace(/\s+Night$/i,'').trim();
+    const row = document.createElement('div');
+    row.className = 'wrow';
+    row.innerHTML = `<div class="day">${label.length>7?label.slice(0,3):label}</div><div class="wi">${heroEmoji(resolveIcon(p.shortForecast,false))}</div><div class="pop">${pop}%</div><div class="bar"><i style="left:${leftPct}%;width:${widthPct}%"></i></div><div class="lo">${lo}°</div><div class="hi">${hi}°</div>`;
+    list.appendChild(row);
+  });
+}
+
+function renderExtras(periods, om){
+  const daily = om?.daily;
+  const precipIn = daily?.precipitation_sum?.[0] ?? 0, snowIn = daily?.snowfall_sum?.[0] ?? 0, precipHrs = daily?.precipitation_hours?.[0] ?? 0;
+  $('ePrecip').textContent = precipIn>0 ? precipIn.toFixed(2)+' in expected' : 'None expected';
+  $('ePrecipSub').textContent = precipHrs>0 ? `~${Math.round(precipHrs)} hr${precipHrs===1?'':'s'} of precip` : 'Dry today';
+  $('eSnow').textContent = snowIn>0 ? snowIn.toFixed(1)+' in expected' : 'None expected';
+
+  const moon = moonPhase();
+  $('eMoon').textContent = moon.icon+' '+moon.name;
+  $('eMoonSub').textContent = moon.nextFull;
+
+  const pollen = seasonalPollen();
+  $('ePollen').textContent = pollen.level;
+  $('ePollenSub').textContent = pollen.type + ' (seasonal est.)';
+
+  $('cSunrise').textContent = formatTimeFromISO(daily?.sunrise?.[0]);
+  $('cSunset').textContent = formatTimeFromISO(daily?.sunset?.[0]);
+
+  const uv = Math.round(daily?.uv_index_max?.[0] ?? om?.current?.uv_index ?? 0);
+  const cat = uvCategory(uv);
+  $('uvVal').textContent = uv; $('uvSmall').textContent = cat.label;
+  $('uvT1').textContent = cat.label + ' Exposure';
+  $('uvT2').textContent = uv>=6?'Wear sunscreen and sunglasses if outside, especially midday.':uv>=3?'Some protection recommended during peak midday hours.':'Minimal risk from UV exposure today.';
+
+  const dayP = periods.find(p => p.isDaytime !== false);
+  const doy = Math.min(dayOfYear(new Date()), 364);
+  const normHi = DAILY_NORM_HIGHS[doy], normLo = DAILY_NORM_LOWS[doy];
+  if (dayP){
+    const diff = Math.round(dayP.temperature - normHi);
+    $('eHist').textContent = diff===0 ? 'Right at normal' : (diff>0?`${diff}° above normal`:`${Math.abs(diff)}° below normal`);
+    $('eHistSub').textContent = `Normal high/low: ${Math.round(normHi)}°/${Math.round(normLo)}°`;
+  }
+
+  const h = om?.hourly;
+  if (h?.apparent_temperature?.length > 3){
+    const now = Date.now();
+    let idx = h.time?.findIndex(t => new Date(t).getTime() >= now) ?? 0;
+    if (idx < 0) idx = 0;
+    const nowFeels = h.apparent_temperature[idx], laterFeels = h.apparent_temperature[Math.min(idx+3, h.apparent_temperature.length-1)];
+    if (nowFeels!=null && laterFeels!=null){
+      const delta = Math.round(laterFeels-nowFeels);
+      $('eFeels').textContent = Math.abs(delta)<2 ? 'Holding steady' : (delta>0?`Rising ${delta}° by evening`:`Falling ${Math.abs(delta)}° by evening`);
+      $('eFeelsSub').textContent = `Feels like ${Math.round(nowFeels)}° now`;
+    }
+  }
+}
+
+function renderOutdoorRating(periods, om, hourlyPeriods){
+  const next12 = hourlyPeriods.slice(0,12);
+  const maxPop = next12.length ? Math.max(...next12.map(h=>h.probabilityOfPrecipitation?.value ?? 0)) : 0;
+  const tempNow = periods[0]?.temperature ?? 60;
+  const wind = om?.current?.wind_speed_10m ?? parseWindMph(hourlyPeriods[0]?.windSpeed) ?? 0;
+  const uv = om?.current?.uv_index ?? 0;
+  const aqi = lastAQI;
+  let score = 100, capAQI = 100;
+  if (maxPop>=70) score-=55; else if (maxPop>=50) score-=40; else if (maxPop>=30) score-=22; else if (maxPop>=20) score-=10;
+  if (tempNow<25) score-=30; else if (tempNow<35) score-=20; else if (tempNow<45) score-=12; else if (tempNow<55) score-=5;
+  else if (tempNow>100) score-=30; else if (tempNow>92) score-=18; else if (tempNow>85) score-=8; else if (tempNow>=62 && tempNow<=80) score+=5;
+  if (wind>30) score-=20; else if (wind>20) score-=12; else if (wind>12) score-=5;
+  if (uv>10) score-=10; else if (uv>7) score-=5;
+  if (aqi != null){
+    if (aqi>300){score-=60;capAQI=15;} else if (aqi>200){score-=45;capAQI=30;} else if (aqi>150){score-=30;capAQI=50;} else if (aqi>100){score-=15;capAQI=70;} else if (aqi>50){score-=5;}
+  }
+  score = Math.max(0, Math.min(100, score, capAQI));
+  const rating = score>=85?'Excellent 🌟':score>=70?'Good 👍':score>=50?'Fair 🤷':score>=30?'Poor 👎':'Stay Inside 🏠';
+  $('eOutdoor').textContent = rating;
+  $('eOutdoorSub').textContent = `Score: ${score}/100`;
+}
+
+function renderWeekend(periods){
+  const satP = periods.find(p => /^saturday$/i.test(p.name));
+  const sunP = periods.find(p => /^sunday$/i.test(p.name));
+  function rate(p){
+    if (!p) return null;
+    const pop = p.probabilityOfPrecipitation?.value ?? 0;
+    let s = 100;
+    if (pop>=70) s-=60; else if (pop>=50) s-=45; else if (pop>=30) s-=25; else if (pop>=20) s-=12;
+    const cat = outlookCat(p.shortForecast);
+    if (cat==='storm') s-=15; if (cat==='snow') s-=10;
+    if (p.temperature<45) s-=15; else if (p.temperature>92) s-=15; else if (p.temperature>=65 && p.temperature<=80) s+=5;
+    return Math.max(0, Math.min(100, s));
+  }
+  const satScore = rate(satP), sunScore = rate(sunP);
+  if (satScore==null && sunScore==null){ $('eWeekend').textContent='—'; $('eWeekendSub').textContent='Check back later'; return; }
+  const scores = [satScore,sunScore].filter(s=>s!=null);
+  const avg = scores.reduce((a,b)=>a+b,0)/scores.length;
+  $('eWeekend').textContent = avg>=80?'Great Weekend! 🎉':avg>=60?'Pretty Good 👍':avg>=40?'Mixed Bag 🤷':'Rough Weekend 😬';
+  const parts = [];
+  if (satP) parts.push('Sat ' + satP.temperature+'°');
+  if (sunP) parts.push('Sun ' + sunP.temperature+'°');
+  $('eWeekendSub').textContent = parts.join(' · ');
+}
+
+// ============================================================
+// LOAD: NWS ALERTS
+// ============================================================
+let activeAlerts = [], alertCycleIdx = 0;
+async function loadAlerts(){
+  try{
+    const [zoneRes, countyRes] = await Promise.all([
+      fetch('https://api.weather.gov/alerts/active?zone=' + CONFIG.nwsZone, { headers: HEADERS }),
+      fetch('https://api.weather.gov/alerts/active?zone=' + CONFIG.nwsCounty, { headers: HEADERS })
+    ]);
+    const zoneData = zoneRes.ok ? await zoneRes.json() : {features:[]};
+    const countyData = countyRes.ok ? await countyRes.json() : {features:[]};
+    const merged = {};
+    [...(zoneData.features||[]), ...(countyData.features||[])].forEach(f=>merged[f.id]=f);
+    activeAlerts = Object.values(merged);
+    renderAlerts();
+  } catch(err){ console.error('loadAlerts failed', err); }
+}
+function renderAlerts(){
+  const bar = $('alertbar'), badge = $('alertBadge');
+  if (!activeAlerts.length){ bar.classList.remove('show'); badge.style.display='none'; return; }
+  bar.classList.add('show'); badge.style.display='flex'; badge.textContent = activeAlerts.length;
+  const cur = activeAlerts[alertCycleIdx % activeAlerts.length];
+  $('alerttext').textContent = cur.properties.event + (cur.properties.headline ? ' — ' + cur.properties.headline : '');
+}
+$('alertbar').addEventListener('click', () => {
+  if (activeAlerts.length > 1){ alertCycleIdx = (alertCycleIdx+1) % activeAlerts.length; renderAlerts(); }
+});
+
+// ============================================================
+// LOAD: AIRNOW AQI
+// ============================================================
+async function loadAQI(){
+  try{
+    const url = `https://www.airnowapi.org/aq/observation/zipCode/current/?format=application/json&zipCode=${CONFIG.airnowZip}&distance=25&API_KEY=${CONFIG.airnowKey}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('AirNow HTTP ' + res.status);
+    const data = await res.json();
+    if (Array.isArray(data) && data.length){
+      const worst = data.reduce((a,b)=> (b.AQI>a.AQI?b:a));
+      lastAQI = worst.AQI;
+      const cat = aqiCategory(worst.AQI);
+      $('cAQI').textContent = worst.AQI + ' · ' + cat.label;
+      $('cAQISub').textContent = worst.ParameterName + (worst.ReportingArea ? ' · ' + worst.ReportingArea : '');
+    } else { $('cAQI').textContent = 'No data'; }
+    if (lastPeriods) renderOutdoorRating(lastPeriods, lastOM, []);
+  } catch(err){ console.error('loadAQI failed', err); $('cAQI').textContent = 'Unavailable'; }
+}
+
+// ============================================================
+// ALMANAC: fun facts / on this day / storm safety (local data)
+// ============================================================
+const FUN_FACTS=[{label:`Ohio Weather Fact`,icon:`🌩️`,text:`Ohio averages roughly 19 to 21 tornadoes per year, with activity peaking from May through July when warm Gulf air collides with cooler northern air masses.`},{label:`Did You Know?`,icon:`🧠`,text:`Tuscarawas County sits in a valley that can trap cold air overnight, often making it 5–10°F colder than surrounding hilltop communities.`},{label:`Weather Joke`,icon:`😄`,text:`Why did the weather forecaster bring a ladder to work? Because the forecast called for high pressure!`},{label:`Ohio Weather Record`,icon:`🏔️`,text:`Ohio's all-time record high is 113°F, set in Gallipolis on July 21, 1934 — during the devastating Dust Bowl heat wave.`},{label:`Ohio Weather Record`,icon:`❄️`,text:`Ohio's coldest recorded temperature is -39°F, set in Milligan on February 10, 1899 — one of the most brutal cold snaps in state history.`},{label:`Forecast Tip`,icon:`💡`,text:`Red sky at night, sailor's delight — red sky in the morning, sailor's warning. This old saying actually has meteorological truth: red skies indicate dust and moisture moving in or out.`},{label:`Did You Know?`,icon:`🧠`,text:`Lake Erie's shallow depth makes it the fastest of the Great Lakes to freeze in winter — and also the quickest to produce intense lake-effect snowstorms for northeast Ohio.`},{label:`Weather Joke`,icon:`😄`,text:`What do you call it when it rains chickens and ducks? Fowl weather!`},{label:`Ohio Weather Fact`,icon:`🌪️`,text:`The Palm Sunday Tornado Outbreak of April 11, 1965 produced 47 tornadoes across six Midwestern states in a single afternoon — one of the largest outbreaks in the region's history.`},{label:`Forecast Tip`,icon:`💡`,text:`In Ohio, if you see anvil-shaped thunderstorm tops flattening out to the east, that storm is likely strengthening — time to head indoors.`},{label:`Did You Know?`,icon:`🧠`,text:`Snow can actually insulate the ground beneath it — soil under a foot of snow stays much warmer than exposed soil during an Arctic blast.`},{label:`Weather Joke`,icon:`😄`,text:`I asked the cloud if it wanted to hang out. It said, 'Sorry, I'm feeling a little under the weather.'`},{label:`Ohio Weather Fact`,icon:`🌧️`,text:`Tuscarawas County averages about 38 inches of rain per year — slightly above the national average — thanks to its position in the mid-Ohio valley moisture corridor.`},{label:`Did You Know?`,icon:`🧠`,text:`Lightning strikes the Earth about 100 times every second. During a typical Ohio summer thunderstorm, a single storm cell can generate thousands of strikes per hour.`},{label:`Forecast Tip`,icon:`💡`,text:`When you see towering cumulus clouds building rapidly in the afternoon, give them about an hour — that's roughly how long it takes for a summer thunderstorm to mature in Ohio.`},{label:`Ohio Weather Record`,icon:`🌨️`,text:`Ohio's greatest 24-hour snowfall on record is 30 inches, which fell near Warren on April 20, 1901 — a remarkable late-spring snowstorm.`},{label:`Weather Joke`,icon:`😄`,text:`Why do meteorologists make great musicians? Because they're always hitting the lows!`},{label:`Did You Know?`,icon:`🧠`,text:`A single thunderstorm can drop more than 125 million gallons of water. That's enough to fill about 190 Olympic swimming pools.`},{label:`Ohio Weather Fact`,icon:`🌤️`,text:`Ohio averages about 178 sunny days per year — less than the national average of 205, largely due to persistent cloud cover from Great Lakes moisture in fall and winter.`},{label:`Forecast Tip`,icon:`💡`,text:`Dew point is a better measure of humidity comfort than relative humidity. When the dew point climbs above 65°F in Ohio, most people start feeling uncomfortably sticky.`},{label:`Did You Know?`,icon:`🧠`,text:`Snow is not white — it's actually transparent. It appears white because the countless tiny ice crystal facets scatter all wavelengths of visible light equally.`},{label:`Weather Joke`,icon:`😄`,text:`What's a tornado's favorite game? Twister — obviously.`},{label:`Ohio Weather Fact`,icon:`⛈️`,text:`Dover, Ohio sits within one of the highest lightning strike density zones in the state. The rolling hills and valley terrain funnel summer thunderstorms directly through Tuscarawas County.`},{label:`Did You Know?`,icon:`🧠`,text:`Wind chill has no effect on inanimate objects like pipes or car engines — it only affects how quickly heat is drawn away from warm-blooded creatures like people and pets.`},{label:`Forecast Tip`,icon:`💡`,text:`If thunder follows lightning by 5 seconds, the strike was about 1 mile away. The 30-30 rule: seek shelter if lightning is within 6 miles (30 seconds), and wait 30 minutes after the last strike.`},{label:`Ohio Weather Record`,icon:`🌊`,text:`The Great Flood of 1913 remains the deadliest natural disaster in Ohio history — over 400 people lost their lives as rivers across the state crested far beyond flood stage.`},{label:`Weather Joke`,icon:`😄`,text:`I tried to catch some fog earlier. I mist.`},{label:`Did You Know?`,icon:`🧠`,text:`Freezing rain occurs when raindrops fall through a shallow layer of freezing air near the surface and instantly glaze everything in ice — one of winter's most dangerous and deceptive weather events.`},{label:`Ohio Weather Fact`,icon:`🍂`,text:`Ohio's fall foliage peak in Tuscarawas County typically lands in mid-October, when overnight temperatures consistently drop below 50°F and trigger the trees' color change.`},{label:`Forecast Tip`,icon:`💡`,text:`A rapidly falling barometer — dropping more than 0.06 inches of mercury per hour — almost always means significant stormy weather is approaching within 12–24 hours.`},{label:`Did You Know?`,icon:`🧠`,text:`The National Weather Service office in Pittsburgh (PBZ) handles forecasts for Tuscarawas County, covering a territory that spans parts of Ohio, Pennsylvania, and West Virginia.`},{label:`Weather Joke`,icon:`😄`,text:`Why can't meteorologists look out the window in the morning? Because then they'd have nothing to do in the afternoon.`},{label:`Ohio Weather Record`,icon:`🌧️`,text:`Ohio's record 24-hour rainfall is 10.75 inches, which fell near Sidney in Shelby County on August 7, 1995 — enough to cause catastrophic flash flooding.`},{label:`Ohio Weather Fact`,icon:`🌪️`,text:`The April 3, 1974 Super Outbreak sent an F5 tornado through Xenia, Ohio, killing 36 people — it remains one of the deadliest tornadoes in state history.`},{label:`Did You Know?`,icon:`🧠`,text:`The June 29, 2012 derecho raced 700 miles from Illinois to the Atlantic coast in about 12 hours, knocking out power to over a million Ohioans during a brutal heat wave.`},{label:`Forecast Tip`,icon:`💡`,text:`Halos around the sun or moon — caused by high cirrus clouds — often signal that a warm front and rain are roughly a day away.`},{label:`Did You Know?`,icon:`🧠`,text:`Ohio sits in what meteorologists call 'Derecho Alley.' These long-lived windstorms can cause tornado-like damage across a path hundreds of miles wide.`}];
+
+const ON_THIS_DAY=[(
+// Jan
+{m:1,d:1,text:`January 1, 1978 — A historic blizzard struck Ohio, burying Tuscarawas County under 2+ feet of snow with winds gusting over 50 mph, paralyzing the region for days.`}),{m:1,d:19,text:`January 19, 1994 — Temperatures plunged to -22°F in parts of Tuscarawas County during one of the coldest outbreaks of the 20th century in the Ohio Valley.`},{m:1,d:26,text:`January 26, 1978 — The Great Blizzard of '78 peaked across eastern Ohio, with New Philadelphia recording near-zero visibility for over 36 hours.`},(
+// Feb
+{m:2,d:14,text:`February 14, 2007 — A major ice storm coated Tuscarawas County in over an inch of ice, snapping power lines and closing roads for several days.`}),{m:2,d:22,text:`February 22, 1900 — A rare February tornado touched down in eastern Ohio, a reminder that severe weather can strike even in the depths of winter.`},(
+// Mar
+{m:3,d:10,text:`March 10, 1948 — A severe late-season blizzard swept through the Ohio Valley, dropping 14 inches of snow on Tuscarawas County and canceling schools for a week.`}),{m:3,d:27,text:`March 27, 1913 — The Great Flood of 1913 began affecting Ohio rivers. Though Tuscarawas County was spared the worst, communities along the Tuscarawas River saw historic rises.`},(
+// Apr
+{m:4,d:3,text:`April 3, 1974 — The Super Outbreak of tornadoes devastated parts of Ohio. While Tuscarawas County avoided direct strikes, over 30 tornadoes touched down across the state that day.`}),{m:4,d:11,text:`April 11, 1965 — The Palm Sunday Tornado Outbreak produced 47 tornadoes across the Midwest. Several touched down in neighboring Ohio counties.`},{m:4,d:28,text:`April 28, 2002 — Severe thunderstorms with baseball-sized hail pounded Tuscarawas County, causing significant crop and property damage across the region.`},(
+// May
+{m:5,d:14,text:`May 14, 1995 — A strong derecho swept through eastern Ohio, with straight-line winds exceeding 70 mph downing thousands of trees across Tuscarawas County.`}),{m:5,d:25,text:`May 25, 1917 — An F3 tornado tracked through Tuscarawas County, one of the most significant tornadoes on record for this part of Ohio.`},(
+// Jun
+{m:6,d:5,text:`June 5, 1998 — A powerful severe thunderstorm outbreak produced multiple tornadoes across eastern Ohio, with warnings issued for Tuscarawas County.`}),{m:6,d:29,text:`June 29, 2012 — A massive derecho swept from Indiana to the Mid-Atlantic, producing 80 mph winds across Tuscarawas County and leaving thousands without power.`},(
+// Jul
+{m:7,d:4,text:`July 4, 1936 — The peak of a brutal heat wave saw temperatures climb to 104°F in parts of eastern Ohio during one of the hottest summers on record.`}),{m:7,d:21,text:`July 21, 1992 — Severe thunderstorms dumped over 4 inches of rain in 2 hours on Tuscarawas County, causing flash flooding in New Philadelphia and Dover.`},(
+// Aug
+{m:8,d:1,text:`August 1, 1925 — Eastern Ohio recorded its highest ever August temperature during a prolonged heat wave that stretched across the entire Ohio Valley.`}),{m:8,d:14,text:`August 14, 2003 — The Northeast Blackout began, though unrelated to weather, it underscored how heat waves strain the power grid — temperatures that day hit 92°F in Tuscarawas County.`},(
+// Sep
+{m:9,d:16,text:`September 16, 2004 — Remnants of Hurricane Ivan brought heavy rainfall to Tuscarawas County, dropping over 3 inches of rain and causing minor flooding along the river.`}),{m:9,d:14,text:`September 14, 2008 — Remnants of Hurricane Ike swept through Ohio with sustained winds of 50–70 mph, causing widespread tree damage and outages across Tuscarawas County.`},(
+// Oct
+{m:10,d:10,text:`October 10, 1906 — An early-season snowstorm dropped 8 inches of wet snow on Tuscarawas County while many trees still had their leaves, causing extensive branch breakage.`}),{m:10,d:24,text:`October 24, 1952 — An early severe cold outbreak sent temperatures into the single digits across eastern Ohio, setting records that still stand in some locations.`},(
+// Nov
+{m:11,d:11,text:`November 11, 1940 — The Armistice Day Blizzard struck the Midwest. While Ohio was spared the worst, Tuscarawas County saw temperatures drop 40°F in a single day.`}),{m:11,d:23,text:`November 23, 1950 — The Appalachian Storm of 1950 produced blizzard conditions across eastern Ohio. New Philadelphia recorded its heaviest November snowfall to date.`},(
+// Dec
+{m:12,d:4,text:`December 4, 2013 — An ice storm coated Tuscarawas County in three-quarters of an inch of ice, making roads impassable and knocking out power to thousands.`}),{m:12,d:23,text:`December 23, 2022 — A historic bomb cyclone brought -10°F temperatures and 40 mph winds to Tuscarawas County, resulting in wind chills approaching -40°F on Christmas Eve.`}];
+
+const STORM_SAFETY_TIPS=[`🌪️ Tornado Warning: Go immediately to the lowest floor, an interior room away from windows. A bathroom, closet, or under a staircase are ideal. Cover your head.`,`⛈️ Severe Thunderstorm: Stay indoors and away from windows. Unplug electronics. Avoid bathing or using corded phones — lightning can travel through plumbing and wiring.`,`🌊 Flash Flood Warning: Never attempt to drive through flooded roads. Just 6 inches of water can knock a person down; 12 inches can sweep away a small vehicle. Turn around, don't drown.`,`📻 Stay informed: Keep a battery-powered NOAA Weather Radio on hand during severe weather so you receive alerts even if power goes out or your phone loses signal.`,`🏠 After the storm: Watch for downed power lines — treat every downed line as live and dangerous. Report them to your utility company and keep others away.`,`📱 Sign up for Tuscarawas County emergency alerts at the county EMA website to receive official evacuation and shelter-in-place notifications directly to your phone.`,`🌩️ Lightning safety: If caught outside, avoid tall trees, open fields, and hilltops. Seek a low-lying area and crouch low — don't lie flat. Get inside a sturdy building or hard-topped vehicle.`,`🧰 Emergency kit: Keep a go-bag ready with water (1 gallon/person/day), non-perishable food, medications, flashlight, batteries, first aid kit, and copies of important documents.`];
+
+let _ffIndex = -1;
+function loadFunFact(forceNew){
+  if (_ffIndex < 0){ _ffIndex = dayOfYear(new Date()) % FUN_FACTS.length; }
+  else if (forceNew){ _ffIndex = (_ffIndex+1) % FUN_FACTS.length; }
+  const ff = FUN_FACTS[_ffIndex];
+  $('ffico').textContent = ff.icon; $('fftext').textContent = ff.text;
+}
+$('shuffleBtn').addEventListener('click', () => loadFunFact(true));
+
+function loadOnThisDay(){
+  const now = new Date(), m = now.getMonth()+1, d = now.getDate();
+  let fact = ON_THIS_DAY.find(f=>f.m===m && f.d===d);
+  if (!fact){
+    const sameMonth = ON_THIS_DAY.filter(f=>f.m===m);
+    if (sameMonth.length) fact = sameMonth.reduce((best,f)=>Math.abs(f.d-d)<Math.abs(best.d-d)?f:best);
+    else { const doy=n=>n.m*31+n.d, today=m*31+d; fact = ON_THIS_DAY.reduce((best,f)=>Math.abs(doy(f)-today)<Math.abs(doy(best)-today)?f:best); }
+  }
+  $('otd').textContent = fact.text;
+}
+loadOnThisDay();
+
+let _stormIdx = Math.floor(Math.random()*STORM_SAFETY_TIPS.length);
+function loadStormTip(next){
+  if (next) _stormIdx = (_stormIdx+1) % STORM_SAFETY_TIPS.length;
+  const tip = STORM_SAFETY_TIPS[_stormIdx];
+  const firstSpace = tip.indexOf(' '), colonIdx = tip.indexOf(':');
+  if (colonIdx > -1){ $('stormTag').textContent = tip.slice(firstSpace+1,colonIdx).trim()||'Safety'; $('stormText').textContent = tip.slice(colonIdx+1).trim(); }
+  else { $('stormTag').textContent='Safety'; $('stormText').textContent = tip.slice(firstSpace+1).trim(); }
+}
+loadStormTip(false);
+$('stormBtn').addEventListener('click', () => loadStormTip(true));
+
+function loadBlog(){
+  const box = $('blogBox'); const cbName = '__xwBlogCb'; let done = false;
+  window[cbName] = function(json){
+    done = true;
+    const entries = (json.feed && json.feed.entry) || [];
+    if (!entries.length){ box.innerHTML = 'No recent posts found.'; return; }
+    box.innerHTML = '';
+    entries.slice(0,5).forEach(entry=>{
+      const link = (entry.link||[]).find(l=>l.rel==='alternate');
+      const href = link ? link.href : 'https://xaviersweather.blogspot.com';
+      const title = (entry.title && entry.title.$t) || 'Untitled';
+      const published = entry.published?.$t ? new Date(entry.published.$t) : null;
+      const dateStr = published ? published.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+      const a = document.createElement('a'); a.href=href; a.target='_blank'; a.rel='noopener'; a.className='bloglink'; a.textContent=title;
+      const span = document.createElement('span'); span.className='blogdate'; span.textContent=dateStr;
+      box.appendChild(a); box.appendChild(span);
+    });
+  };
+  const script = document.createElement('script');
+  script.src = CONFIG.blogFeed + '&callback=' + cbName;
+  script.onerror = () => { if (!done) box.innerHTML = 'Blog feed unavailable right now.'; };
+  document.head.appendChild(script);
+  setTimeout(() => { if (!done) box.innerHTML = 'Blog feed unavailable right now.'; }, 6000);
+}
+
+// ============================================================
+// TAB SWITCHING (Now / Forecast / Almanac are in-page sections)
+// ============================================================
+function showTab(name){
+  document.querySelectorAll('.tabitem[data-intab]').forEach(t => t.classList.toggle('active', t.dataset.intab === name));
+  document.querySelectorAll('.tab').forEach(s => s.classList.remove('active'));
+  $('tab-' + name).classList.add('active');
+  history.replaceState(null, '', '#' + name);
+}
+document.querySelectorAll('.tabitem[data-intab]').forEach(item => {
+  item.addEventListener('click', (e) => { e.preventDefault(); showTab(item.dataset.intab); window.scrollTo(0,0); });
+});
+(function(){
+  const hash = location.hash.replace('#','');
+  if (['now','forecast','almanac'].includes(hash)) showTab(hash);
+})();
+
+// ============================================================
+// REFRESH + INIT
+// ============================================================
+function refreshAll(){
+  const btn = $('refreshBtn');
+  btn.classList.add('spin'); setTimeout(()=>btn.classList.remove('spin'), 800);
+  loadWeather().then(() => loadAQI());
+  loadAlerts();
+}
+$('refreshBtn').addEventListener('click', refreshAll);
+$('footerYear').textContent = new Date().getFullYear();
+
+refreshAll();
+loadFunFact(false);
+loadBlog();
+
+setInterval(loadWeather, 600000);
+setInterval(loadAlerts, 300000);
+setInterval(loadAQI, 1800000);
+
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+
+</script>
+</body>
+</html>
